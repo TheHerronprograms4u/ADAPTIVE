@@ -1,0 +1,117 @@
+import React from 'react';
+import { AdaptiveProvider, useAdaptive } from './context/AdaptiveContext';
+import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
+import { MobileNav } from './components/layout/MobileNav';
+import { CommandPalette } from './components/layout/CommandPalette';
+import { FocusModeOverlay } from './components/layout/FocusModeOverlay';
+
+import { SplashScreen } from './components/screens/SplashScreen';
+import { WelcomeScreen } from './components/screens/WelcomeScreen';
+import { OnboardingScreen } from './components/screens/OnboardingScreen';
+import { DiagnosticScreen } from './components/screens/DiagnosticScreen';
+import { DashboardScreen } from './components/screens/DashboardScreen';
+import { SessionRunnerScreen } from './components/screens/SessionRunnerScreen';
+import { PracticeScreen } from './components/screens/PracticeScreen';
+import { AITutorScreen } from './components/screens/AITutorScreen';
+import { KnowledgeMapScreen } from './components/screens/KnowledgeMapScreen';
+import { ReviewCenterScreen } from './components/screens/ReviewCenterScreen';
+import { AnalyticsScreen } from './components/screens/AnalyticsScreen';
+import { StudyPlannerScreen } from './components/screens/StudyPlannerScreen';
+import { ExamModeScreen } from './components/screens/ExamModeScreen';
+import { DocumentImportScreen } from './components/screens/DocumentImportScreen';
+import { AchievementsScreen } from './components/screens/AchievementsScreen';
+import { ProfileScreen } from './components/screens/ProfileScreen';
+import { SettingsScreen } from './components/screens/SettingsScreen';
+
+const MainAppContent: React.FC = () => {
+  const { currentScreen } = useAdaptive();
+
+  const renderActiveScreen = () => {
+    switch (currentScreen) {
+      case 'splash':
+        return <SplashScreen />;
+      case 'welcome':
+        return <WelcomeScreen />;
+      case 'onboarding':
+        return <OnboardingScreen />;
+      case 'diagnostic':
+        return <DiagnosticScreen />;
+      case 'dashboard':
+        return <DashboardScreen />;
+      case 'session':
+        return <SessionRunnerScreen />;
+      case 'practice':
+        return <PracticeScreen />;
+      case 'tutor':
+        return <AITutorScreen />;
+      case 'knowledge_galaxy':
+      case 'concept_detail':
+        return <KnowledgeMapScreen />;
+      case 'review_center':
+        return <ReviewCenterScreen />;
+      case 'analytics':
+        return <AnalyticsScreen />;
+      case 'study_planner':
+        return <StudyPlannerScreen />;
+      case 'exam_mode':
+      case 'exam_report':
+        return <ExamModeScreen />;
+      case 'document_import':
+        return <DocumentImportScreen />;
+      case 'achievements':
+        return <AchievementsScreen />;
+      case 'profile':
+        return <ProfileScreen />;
+      case 'settings':
+        return <SettingsScreen />;
+      default:
+        return <DashboardScreen />;
+    }
+  };
+
+  const isFullscreenScreen = currentScreen === 'splash' || currentScreen === 'welcome' || currentScreen === 'onboarding';
+
+  if (isFullscreenScreen) {
+    return (
+      <main className="min-h-screen bg-zinc-950 p-4 sm:p-8">
+        {renderActiveScreen()}
+      </main>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-zinc-950 text-zinc-100 selection:bg-indigo-500/30 selection:text-indigo-200 font-sans">
+      {/* Sidebar for Desktop */}
+      <Sidebar />
+
+      {/* Main Column */}
+      <div className="flex flex-1 flex-col min-w-0">
+        <Header />
+
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 pb-24 lg:pb-12">
+          {renderActiveScreen()}
+        </main>
+      </div>
+
+      {/* Mobile Bottom Dock */}
+      <MobileNav />
+
+      {/* Global Command Palette (⌘K) */}
+      <CommandPalette />
+
+      {/* Fullscreen Focus Mode Overlay */}
+      <FocusModeOverlay />
+    </div>
+  );
+};
+
+export function App() {
+  return (
+    <AdaptiveProvider>
+      <MainAppContent />
+    </AdaptiveProvider>
+  );
+}
+
+export default App;

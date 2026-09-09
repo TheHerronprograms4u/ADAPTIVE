@@ -1,10 +1,16 @@
 -- =========================================================
--- Adaptive Learning Platform - Complete Database Schema
+-- Adaptive Learning Platform - Complete Database Schema Setup
 -- Run this in your Supabase SQL Editor (Dashboard -> SQL Editor)
 -- =========================================================
 
--- 1. Profiles Table
-CREATE TABLE IF NOT EXISTS public.profiles (
+-- 1. Drop existing tables if re-initializing schema cleanly
+DROP TABLE IF EXISTS public.attempts CASCADE;
+DROP TABLE IF EXISTS public.user_concept_states CASCADE;
+DROP TABLE IF EXISTS public.documents CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
+-- 2. Profiles Table
+CREATE TABLE public.profiles (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT,
@@ -32,8 +38,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. User Concept States Table (Tracks continuous BKT & Spaced Repetition parameters)
-CREATE TABLE IF NOT EXISTS public.user_concept_states (
+-- 3. User Concept States Table (Tracks continuous BKT & Spaced Repetition parameters)
+CREATE TABLE public.user_concept_states (
   user_id TEXT NOT NULL,
   concept_id TEXT NOT NULL,
   mastery_score NUMERIC DEFAULT 0.2,
@@ -59,8 +65,8 @@ CREATE TABLE IF NOT EXISTS public.user_concept_states (
   PRIMARY KEY (user_id, concept_id)
 );
 
--- 3. Attempts Log Table
-CREATE TABLE IF NOT EXISTS public.attempts (
+-- 4. Attempts Log Table
+CREATE TABLE public.attempts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   question_id TEXT NOT NULL,
@@ -77,8 +83,8 @@ CREATE TABLE IF NOT EXISTS public.attempts (
   timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Uploaded Documents Table
-CREATE TABLE IF NOT EXISTS public.documents (
+-- 5. Uploaded Documents Table
+CREATE TABLE public.documents (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   filename TEXT,
@@ -93,23 +99,17 @@ CREATE TABLE IF NOT EXISTS public.documents (
   study_plan_days INT DEFAULT 7
 );
 
--- Enable Row Level Security (RLS)
+-- 6. Enable Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_concept_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if any
-DROP POLICY IF EXISTS "Allow all access to profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow all access to user_concept_states" ON public.user_concept_states;
-DROP POLICY IF EXISTS "Allow all access to attempts" ON public.attempts;
-DROP POLICY IF EXISTS "Allow all access to documents" ON public.documents;
-
--- Create Permissive Access Policies
+-- 7. Create Permissive Policies
 CREATE POLICY "Allow all access to profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to user_concept_states" ON public.user_concept_states FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to attempts" ON public.attempts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to documents" ON public.documents FOR ALL USING (true) WITH CHECK (true);
 
--- Refresh PostgREST Schema Cache
+-- 8. Refresh Schema Cache
 NOTIFY pgrst, 'reload schema';

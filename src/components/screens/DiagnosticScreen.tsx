@@ -3,14 +3,11 @@ import { useAdaptive } from '../../context/AdaptiveContext';
 import { QuestionRenderer } from '../shared/QuestionRenderer';
 import { ConfidenceRating } from '../../types/assessment';
 import {
-  Sparkles,
   Activity,
   CheckCircle2,
   ArrowRight,
   ShieldAlert,
   Compass,
-  Layers,
-  Zap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -63,7 +60,9 @@ export const DiagnosticScreen: React.FC = () => {
       finishDiagnostic();
       try {
         confetti({ particleCount: 70, spread: 60 });
-      } catch (e) {}
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -173,6 +172,7 @@ export const DiagnosticScreen: React.FC = () => {
 
       {currentQ && (
         <QuestionRenderer
+          key={currentQ.id}
           question={currentQ}
           onSubmitAnswer={handleAnswerSubmit}
           onNextQuestion={handleNext}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { LearnerProfile, ModalityWeights, CognitiveMilestone } from '../types/learner';
+import { LearnerProfile, CognitiveMilestone } from '../types/learner';
 import { Subject, Concept, UserConceptState } from '../types/subject';
 import { Question, UserAttempt, DiagnosticAssessmentState, ConfidenceRating } from '../types/assessment';
 import { DynamicLearningSession, AdaptiveRecommendation } from '../types/engine';
@@ -7,7 +7,7 @@ import { UploadedDocument, ExamPreparationPlan } from '../types/document';
 import { DEFAULT_SUBJECTS } from '../data/defaultSubjects';
 import { DEFAULT_CONCEPTS, DEFAULT_QUESTIONS } from '../data/defaultCurriculum';
 import { calculateBKTUpdate, determineMasteryTier, confidenceRatingToScalar, calculateCalibrationScore, computeContinuousDifficulty } from '../lib/learningEngine';
-import { calculateCurrentRetention, processSpacedRepetitionReview } from '../lib/spacedRepetition';
+import { processSpacedRepetitionReview } from '../lib/spacedRepetition';
 import { classifyUserError } from '../lib/misconceptionClassifier';
 import { computeNextBestLearningAction } from '../lib/recommendationEngine';
 import { generatePersonalizedSession } from '../lib/sessionGenerator';
@@ -333,7 +333,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
-      if (event === 'SIGNED_IN' || (session?.user && !isAuthenticated)) {
+      if (event === 'SIGNED_IN' || Boolean(session?.user)) {
         setIsAuthenticated(true);
         if (session?.user) {
           const cloudProfile = await fetchProfileFromSupabase(session.user.id);
@@ -784,6 +784,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAdaptive = () => {
   const context = useContext(AdaptiveContext);
   if (!context) {

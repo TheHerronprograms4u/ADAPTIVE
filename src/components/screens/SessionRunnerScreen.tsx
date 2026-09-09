@@ -10,8 +10,6 @@ import {
   ArrowRight,
   Sparkles,
   Bot,
-  RotateCcw,
-  Layers,
   Award,
   BookOpen,
   Zap,
@@ -32,6 +30,25 @@ export const SessionRunnerScreen: React.FC = () => {
   const [isEvaluatingTeach, setIsEvaluatingTeach] = useState<boolean>(false);
   const [teachFeedback, setTeachFeedback] = useState<string | null>(null);
 
+  const currentActivity = currentSession ? currentSession.activities[currentSession.currentPhaseIndex] : undefined;
+  const isFinished = !currentSession || currentSession.isFinished || !currentActivity;
+
+  // Trigger celebratory confetti upon session completion
+  useEffect(() => {
+    if (currentSession && isFinished) {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#6366f1', '#10b981', '#06b6d4', '#f59e0b'],
+        });
+      } catch {
+        // ignore
+      }
+    }
+  }, [currentSession, isFinished]);
+
   if (!currentSession) {
     return (
       <div className="flex h-96 flex-col items-center justify-center rounded-3xl border border-white/10 bg-zinc-900/40 p-8 text-center backdrop-blur-xl">
@@ -49,25 +66,6 @@ export const SessionRunnerScreen: React.FC = () => {
       </div>
     );
   }
-
-  const currentActivity = currentSession.activities[currentSession.currentPhaseIndex];
-  const isFinished = currentSession.isFinished || !currentActivity;
-
-  // Trigger celebratory confetti upon session completion
-  useEffect(() => {
-    if (isFinished) {
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#6366f1', '#10b981', '#06b6d4', '#f59e0b'],
-        });
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, [isFinished]);
 
   if (isFinished) {
     return (
@@ -275,6 +273,7 @@ export const SessionRunnerScreen: React.FC = () => {
         </div>
       ) : activeQuestion ? (
         <QuestionRenderer
+          key={activeQuestion.id}
           question={activeQuestion}
           onSubmitAnswer={handleAnswerSubmit}
           onNextQuestion={handleNextInPhase}

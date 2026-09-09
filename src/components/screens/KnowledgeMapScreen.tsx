@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { KnowledgeGalaxyCanvas } from '../knowledgeGalaxy/KnowledgeGalaxyCanvas';
 import { ConceptDetailDrawer } from '../knowledgeGalaxy/ConceptDetailDrawer';
-import { Compass, Sparkles, Layers, ShieldCheck, Zap } from 'lucide-react';
+import { Compass } from 'lucide-react';
 
 export const KnowledgeMapScreen: React.FC = () => {
-  const { concepts, userConceptStates, selectedConceptId, setSelectedConceptId } = useAdaptive();
+  const { concepts, selectedConceptId, setSelectedConceptId } = useAdaptive();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleSelectConcept = (conceptId: string) => {

@@ -81,7 +81,7 @@ class SpeechController {
     if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();
-      } catch (e) {
+      } catch {
         // ignore
       }
       this.isListening = false;
@@ -97,7 +97,7 @@ class SpeechController {
     // Strip markdown & LaTeX symbols for clean spoken narration
     const cleanText = text
       .replace(/\$\$[\s\S]*?\$\$/g, ' mathematical equation ')
-      .replace(/\$([^\$]+)\$/g, '$1')
+      .replace(/\$([^$]+)\$/g, '$1')
       .replace(/#+\s/g, '')
       .replace(/[*_`]/g, '');
 

@@ -3,15 +3,10 @@ import { useAdaptive } from '../../context/AdaptiveContext';
 import { ExamPreparationPlan } from '../../types/document';
 import {
   Calendar,
-  Sparkles,
   CheckCircle2,
   Clock,
-  ArrowRight,
   RefreshCw,
-  Plus,
   PlayCircle,
-  AlertCircle,
-  Flame,
 } from 'lucide-react';
 
 export const StudyPlannerScreen: React.FC = () => {
@@ -19,15 +14,8 @@ export const StudyPlannerScreen: React.FC = () => {
 
   const activeConcepts = concepts.filter(c => c.subjectId === activeSubject.id);
 
-  const [examName, setExamName] = useState<string>(
-    profile.examName || `${activeSubject.name} Comprehensive Mastery`
-  );
-  const [daysRemaining, setDaysRemaining] = useState<number>(
-    Math.max(7, activeConcepts.length + 2)
-  );
-  const [dailyMinutes, setDailyMinutes] = useState<number>(
-    profile.preferredSessionMinutes || 25
-  );
+  const examName = profile.examName || `${activeSubject.name} Comprehensive Mastery`;
+  const daysRemaining = Math.max(7, activeConcepts.length + 2);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   // Generate dynamic plan from active subject concepts

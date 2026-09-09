@@ -2,16 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { QuestionRenderer } from '../shared/QuestionRenderer';
 import { ConfidenceRating, UserAttempt } from '../../types/assessment';
-import { MathText } from '../shared/MathText';
 import {
   GraduationCap,
   Clock,
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
-  TrendingUp,
-  ShieldAlert,
-  Award,
   BookOpen,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -77,7 +73,9 @@ export const ExamModeScreen: React.FC = () => {
       setExamFinished(true);
       try {
         confetti({ particleCount: 70, spread: 60 });
-      } catch (e) {}
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -302,6 +300,7 @@ export const ExamModeScreen: React.FC = () => {
 
       {activeQ && (
         <QuestionRenderer
+          key={activeQ.id}
           question={activeQ}
           onSubmitAnswer={handleAnswer}
           onNextQuestion={handleNext}

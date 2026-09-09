@@ -1,14 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
-import { Concept, UserConceptState } from '../../types/subject';
-import { ZoomIn, ZoomOut, RotateCcw, Filter, Sparkles, Layers, ShieldAlert, ArrowRight } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Filter, Sparkles, ArrowRight } from 'lucide-react';
 
 interface KnowledgeGalaxyCanvasProps {
   onSelectConcept: (conceptId: string) => void;
 }
 
 export const KnowledgeGalaxyCanvas: React.FC<KnowledgeGalaxyCanvasProps> = ({ onSelectConcept }) => {
-  const { concepts, userConceptStates, activeSubject } = useAdaptive();
+  const { concepts, userConceptStates } = useAdaptive();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [zoom, setZoom] = useState<number>(1.0);
@@ -205,7 +204,7 @@ export const KnowledgeGalaxyCanvas: React.FC<KnowledgeGalaxyCanvasProps> = ({ on
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [concepts, userConceptStates, panOffset, zoom, hoveredConceptId, selectedTierFilter]);
+  }, [concepts, userConceptStates, panOffset, zoom, hoveredConceptId, selectedTierFilter, filteredConcepts]);
 
   // Mouse / Pan interaction
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -242,7 +241,7 @@ export const KnowledgeGalaxyCanvas: React.FC<KnowledgeGalaxyCanvasProps> = ({ on
     setIsDragging(false);
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     if (hoveredConceptId) {
       onSelectConcept(hoveredConceptId);
     }

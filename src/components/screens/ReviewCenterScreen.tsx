@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { getReviewUrgency } from '../../lib/spacedRepetition';
-import { ProgressRing } from '../shared/ProgressRing';
 import { MathText } from '../shared/MathText';
 import {
   RotateCcw,
-  Sparkles,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  PlayCircle,
   ArrowRight,
-  ShieldCheck,
   Brain,
   Zap,
 } from 'lucide-react';
 
 export const ReviewCenterScreen: React.FC = () => {
-  const { concepts, userConceptStates, navigateTo, submitAttempt } = useAdaptive();
+  const { concepts, userConceptStates, submitAttempt } = useAdaptive();
 
   const [activeReviewConceptId, setActiveReviewConceptId] = useState<string | null>(null);
-  const [activePromptIndex, setActivePromptIndex] = useState<number>(0);
   const [isRevealed, setIsRevealed] = useState<boolean>(false);
 
   // Sort concepts by retention decay urgency (lowest retention first)

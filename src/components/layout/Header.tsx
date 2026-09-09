@@ -7,13 +7,9 @@ import {
   Maximize2,
   Sparkles,
   Flame,
-  CheckCircle2,
-  AlertCircle,
   X,
-  Volume2,
   User,
   LogOut,
-  UserPlus,
   Settings,
 } from 'lucide-react';
 

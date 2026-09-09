@@ -18,9 +18,7 @@ import {
   Lightbulb,
   Award,
   Layers,
-  CheckCircle2,
   RefreshCw,
-  MessageSquare,
 } from 'lucide-react';
 
 const TUTOR_MODES: { mode: TutorMode; label: string; desc: string; icon: any }[] = [
@@ -34,6 +32,9 @@ const TUTOR_MODES: { mode: TutorMode; label: string; desc: string; icon: any }[]
   { mode: 'debug', label: 'Debug Mistakes', desc: 'Dissecting error root causes', icon: RefreshCw },
   { mode: 'teach_me', label: 'Teach Me Mode', desc: 'You teach the AI, AI grades depth', icon: Bot },
 ];
+
+const generateMsgId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+const getFormattedTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 export const AITutorScreen: React.FC = () => {
   const {
@@ -55,7 +56,7 @@ export const AITutorScreen: React.FC = () => {
       text: `Hello ${(profile.name || 'Learner').split(' ')[0]}. I am your personalized Socratic tutor.\n\nI have access to your continuous Bayesian Knowledge graph and know your current mastery on **${
         currentConcept?.name || 'this domain'
       }** is **${Math.round((userConceptStates[currentConcept?.id]?.masteryScore ?? 0) * 100)}%**.\n\nHow would you like to explore this concept today? You can ask a direct question, request an intuitive analogy, or test your reasoning in **Teach Me** mode.`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: 'Just now',
       suggestedFollowUps: [
         'Can you give me an intuitive analogy for the core principles?',
         'Why does this theorem work from first principles?',
@@ -103,11 +104,11 @@ export const AITutorScreen: React.FC = () => {
     if (!text || isLoading) return;
 
     const userMsg: TutorMessage = {
-      id: `usr-${Date.now()}`,
+      id: generateMsgId('usr'),
       sender: 'user',
       mode: activeMode,
       text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: getFormattedTime(),
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -134,11 +135,11 @@ export const AITutorScreen: React.FC = () => {
       });
 
       const tutorMsg: TutorMessage = {
-        id: `tut-${Date.now()}`,
+        id: generateMsgId('tut'),
         sender: 'tutor',
         mode: activeMode,
         text: replyText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: getFormattedTime(),
         suggestedFollowUps:
           activeMode === 'socratic'
             ? ['I think the boundary constraint shifts left.', 'What if the sign was negative?']

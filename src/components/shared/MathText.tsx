@@ -94,14 +94,15 @@ function parseInlineTokens(text: string): React.ReactNode[] {
     return key;
   });
 
-  protectedText = protectedText.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
+  protectedText = protectedText.replace(/\$([^$\n]+?)\$/g, (_, math) => {
     const key = `\u0001MATH_${tokenCounter++}\u0001`;
     placeholderMap[key] = { type: 'math', content: math.trim() };
     return key;
   });
 
   // 3. Master regex for markdown formatting
-  const masterRegex = /(\u0001(?:CODE|MATH)_\d+\u0001|\*\*\*(?:[^\*]+)\*\*\*|___(?:[^_]+)___|\*\*(?:[^\*]+)\*\*|__(?:[^_]+)__|(?:\*[^\*\s][^\*]*\*)|(?:_[^_]+_)|~~(?:[^~]+)~~|\[(?:[^\]]+)\]\((?:[^)]+)\))/g;
+  // eslint-disable-next-line no-control-regex
+  const masterRegex = /(\u0001(?:CODE|MATH)_\d+\u0001|\*\*\*(?:[^*]+)\*\*\*|___(?:[^_]+)___|\*\*(?:[^*]+)\*\*|__(?:[^_]+)__|(?:\*[^*\s][^*]*\*)|(?:_[^_]+_)|~~(?:[^~]+)~~|\[(?:[^\]]+)\]\((?:[^)]+)\))/g;
 
   const parts = protectedText.split(masterRegex);
 
@@ -328,7 +329,7 @@ function parseTextToBlocks(rawText: string): BlockNode[] {
       }
 
       // Horizontal rule: --- or ***
-      if (/^(\-{3,}|\*{3,}|_{3,})$/.test(lineTrim)) {
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(lineTrim)) {
         flushText();
         flushUl();
         flushOl();

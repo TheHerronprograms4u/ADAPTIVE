@@ -12,9 +12,6 @@ import {
   AlertTriangle,
   Lightbulb,
   CheckCircle2,
-  Clock,
-  ArrowRight,
-  Zap,
 } from 'lucide-react';
 
 interface ConceptDetailDrawerProps {

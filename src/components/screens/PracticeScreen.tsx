@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { QuestionRenderer } from '../shared/QuestionRenderer';
 import { ConfidenceRating } from '../../types/assessment';
-import { PlayCircle, ArrowLeft, Sparkles, Award } from 'lucide-react';
+import { PlayCircle, ArrowLeft } from 'lucide-react';
 
 export const PracticeScreen: React.FC = () => {
   const {
@@ -17,7 +17,6 @@ export const PracticeScreen: React.FC = () => {
   const conceptQuestions = questions.filter(q => q.conceptId === activeConcept.id);
 
   const [questionIdx, setQuestionIdx] = useState<number>(0);
-  const [completedCount, setCompletedCount] = useState<number>(0);
 
   const activeQuestion = conceptQuestions[questionIdx] || questions[0];
 
@@ -33,7 +32,6 @@ export const PracticeScreen: React.FC = () => {
       responseTimeSeconds: timeSec,
       difficultyAtTime: activeQuestion.difficulty,
     });
-    setCompletedCount(prev => prev + 1);
   };
 
   const handleNext = () => {
@@ -74,6 +72,7 @@ export const PracticeScreen: React.FC = () => {
       {/* Question Renderer */}
       {activeQuestion && (
         <QuestionRenderer
+          key={activeQuestion.id}
           question={activeQuestion}
           onSubmitAnswer={handleAnswerSubmit}
           onNextQuestion={handleNext}

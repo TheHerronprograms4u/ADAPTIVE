@@ -111,7 +111,7 @@ export async function fetchProfileFromSupabase(userId: string): Promise<LearnerP
       createdAt: data.created_at || new Date().toISOString(),
       lastActiveAt: data.updated_at || new Date().toISOString(),
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }

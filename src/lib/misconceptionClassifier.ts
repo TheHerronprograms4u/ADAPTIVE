@@ -1,5 +1,5 @@
-import { MisconceptionCategory, MisconceptionPattern } from '../types/subject';
-import { Question, OptionDistractor } from '../types/assessment';
+import { MisconceptionCategory } from '../types/subject';
+import { Question } from '../types/assessment';
 
 export interface ClassifiedError {
   category: MisconceptionCategory;

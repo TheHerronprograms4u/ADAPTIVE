@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAdaptive, ScreenName } from '../../context/AdaptiveContext';
+import { useAdaptive } from '../../context/AdaptiveContext';
 import {
   Search,
-  BookOpen,
   Bot,
   PlayCircle,
-  RotateCcw,
-  Sparkles,
-  Command,
   ArrowRight,
   Compass,
-  FileText,
-  UserCheck,
 } from 'lucide-react';
 
 export const CommandPalette: React.FC = () => {

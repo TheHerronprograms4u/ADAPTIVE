@@ -15,7 +15,6 @@ export const FocusModeOverlay: React.FC = () => {
 
   const [secondsRemaining, setSecondsRemaining] = useState<number>(25 * 60);
   const [isRunning, setIsRunning] = useState<boolean>(true);
-  const [focusNote, setFocusNote] = useState<string>('');
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [newTaskInput, setNewTaskInput] = useState<string>('');
 

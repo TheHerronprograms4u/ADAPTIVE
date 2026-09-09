@@ -2,14 +2,7 @@ import React from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import {
   User,
-  Zap,
-  Target,
-  Flame,
-  Clock,
-  CheckCircle2,
-  Award,
   Sparkles,
-  UserCheck,
   Brain,
 } from 'lucide-react';
 

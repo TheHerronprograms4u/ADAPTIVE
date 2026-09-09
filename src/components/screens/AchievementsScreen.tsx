@@ -2,7 +2,6 @@ import React from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import {
   Award,
-  Sparkles,
   CheckCircle2,
   Lock,
   Layers,
@@ -10,7 +9,6 @@ import {
   ShieldCheck,
   GraduationCap,
   Zap,
-  Flame,
 } from 'lucide-react';
 
 export const AchievementsScreen: React.FC = () => {

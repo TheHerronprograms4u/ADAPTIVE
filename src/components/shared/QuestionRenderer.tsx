@@ -16,8 +16,6 @@ import {
   Square,
   MoveUp,
   MoveDown,
-  RefreshCw,
-  Zap,
 } from 'lucide-react';
 
 interface QuestionRendererProps {
@@ -37,7 +35,12 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   const [selectedMultiple, setSelectedMultiple] = useState<string[]>([]);
   const [numericalInput, setNumericalInput] = useState<string>('');
   const [explanationInput, setExplanationInput] = useState<string>('');
-  const [orderedItems, setOrderedItems] = useState<{ id: string; text: string; correctIndex: number }[]>([]);
+  const [orderedItems, setOrderedItems] = useState<{ id: string; text: string; correctIndex: number }[]>(() => {
+    if (question.orderingItems) {
+      return [...question.orderingItems].sort(() => Math.random() - 0.5);
+    }
+    return [];
+  });
   const [matchedPairs, setMatchedPairs] = useState<Record<string, string>>({});
   const [activeLeftMatch, setActiveLeftMatch] = useState<string | null>(null);
 
@@ -48,37 +51,18 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   const [detectedError, setDetectedError] = useState<any>(null);
 
   const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // Reset state for new question
-    setSelectedOption('');
-    setSelectedMultiple([]);
-    setNumericalInput('');
-    setExplanationInput('');
-    setMatchedPairs({});
-    setActiveLeftMatch(null);
-    setIsSubmitted(false);
-    setIsCorrect(false);
-    setDetectedError(null);
-    setConfidence('confident');
-
-    if (question.orderingItems) {
-      // Shuffle ordering items initially
-      const shuffled = [...question.orderingItems].sort(() => Math.random() - 0.5);
-      setOrderedItems(shuffled);
-    }
-
     startTimeRef.current = Date.now();
-    setResponseTime(0);
 
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = window.setInterval(() => {
+    const interval = window.setInterval(() => {
       setResponseTime(Math.round((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
+    timerRef.current = interval;
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearInterval(interval);
     };
   }, [question.id]);
 

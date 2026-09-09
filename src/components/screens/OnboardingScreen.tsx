@@ -4,27 +4,20 @@ import { EducationLevel, GoalType } from '../../types/learner';
 import {
   Sparkles,
   ArrowRight,
-  ArrowLeft,
-  Sliders,
-  CheckCircle2,
-  BookOpen,
   Zap,
   Target,
   GraduationCap,
-  Eye,
-  Layers,
-  HelpCircle,
 } from 'lucide-react';
 
 export const OnboardingScreen: React.FC = () => {
-  const { profile, updateProfile, subjects, navigateTo, startDiagnostic } = useAdaptive();
+  const { profile, updateProfile, startDiagnostic } = useAdaptive();
 
   const [step, setStep] = useState<number>(1);
   const [name, setName] = useState<string>(profile.name !== 'Learner' ? profile.name : '');
   const [educationLevel, setEducationLevel] = useState<EducationLevel>(profile.educationLevel || 'undergraduate');
   const [targetGoal, setTargetGoal] = useState<GoalType>(profile.targetGoal || 'master_subject');
   const [sessionMinutes, setSessionMinutes] = useState<number>(profile.preferredSessionMinutes || 25);
-  const [pace, setPace] = useState<'deliberate' | 'balanced' | 'accelerated'>(profile.pacePreference || 'balanced');
+  const pace = profile.pacePreference || 'balanced';
 
   const [modalities, setModalities] = useState(profile.modalities || {
     visual: 0.85,

@@ -1,13 +1,11 @@
 import React from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import {
-  Zap,
   Sparkles,
   ArrowRight,
   Compass,
   Bot,
   RotateCcw,
-  UserPlus,
   LogIn,
 } from 'lucide-react';
 

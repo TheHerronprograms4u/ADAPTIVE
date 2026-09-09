@@ -8,11 +8,7 @@ import {
   FileUp,
   Sparkles,
   CheckCircle2,
-  FileText,
-  ArrowRight,
-  Layers,
   Compass,
-  BookOpen,
 } from 'lucide-react';
 
 export const DocumentImportScreen: React.FC = () => {

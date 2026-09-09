@@ -12,9 +12,6 @@ import {
   Area,
   BarChart,
   Bar,
-  ScatterChart,
-  Scatter,
-  ZAxis,
 } from 'recharts';
 import { generateForgettingCurveData } from '../../lib/spacedRepetition';
 import {
@@ -22,10 +19,7 @@ import {
   TrendingUp,
   Brain,
   Target,
-  ShieldCheck,
-  Zap,
   Activity,
-  Flame,
 } from 'lucide-react';
 
 export const AnalyticsScreen: React.FC = () => {

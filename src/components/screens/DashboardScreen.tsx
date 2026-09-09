@@ -6,18 +6,14 @@ import {
   PlayCircle,
   RotateCcw,
   Sparkles,
-  Zap,
-  Target,
   Clock,
   ArrowRight,
   TrendingUp,
   ShieldAlert,
   CheckCircle2,
-  HelpCircle,
   Compass,
   Bot,
   Flame,
-  Award,
 } from 'lucide-react';
 
 export const DashboardScreen: React.FC = () => {

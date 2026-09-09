@@ -52,9 +52,13 @@ export async function syncProfileToSupabase(profile: LearnerProfile) {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
 
+    if (error) {
+      console.warn('Supabase profile sync note:', error.message);
+    }
+
     return { data, error };
-  } catch (err) {
-    console.error('Failed to sync profile to Supabase:', err);
+  } catch (err: any) {
+    console.warn('Supabase profile sync note:', err.message || err);
     return { data: null, error: err };
   }
 }
@@ -107,7 +111,6 @@ export async function fetchProfileFromSupabase(userId: string): Promise<LearnerP
       lastActiveAt: data.updated_at || new Date().toISOString(),
     };
   } catch (err) {
-    console.error('Error fetching profile from Supabase:', err);
     return null;
   }
 }
@@ -141,11 +144,15 @@ export async function syncConceptStatesToSupabase(userId: string, states: Record
       updated_at: new Date().toISOString(),
     }));
 
-    await supabase
+    const { error } = await supabase
       .from('user_concept_states')
       .upsert(rows, { onConflict: 'user_id,concept_id' });
-  } catch (err) {
-    console.error('Failed to sync concept states to Supabase:', err);
+
+    if (error) {
+      console.warn('Supabase concept states sync note:', error.message);
+    }
+  } catch (err: any) {
+    console.warn('Supabase concept states sync note:', err.message || err);
   }
 }
 
@@ -153,7 +160,7 @@ export async function saveAttemptToSupabase(attempt: UserAttempt) {
   if (!isSupabaseConfigured) return;
 
   try {
-    await supabase.from('attempts').insert({
+    const { error } = await supabase.from('attempts').insert({
       id: attempt.id,
       user_id: attempt.userId,
       question_id: attempt.questionId,
@@ -169,8 +176,12 @@ export async function saveAttemptToSupabase(attempt: UserAttempt) {
       detected_misconception: attempt.detectedMisconception,
       timestamp: attempt.timestamp,
     });
-  } catch (err) {
-    console.error('Failed to record attempt in Supabase:', err);
+
+    if (error) {
+      console.warn('Supabase attempt save note:', error.message);
+    }
+  } catch (err: any) {
+    console.warn('Supabase attempt save note:', err.message || err);
   }
 }
 
@@ -178,7 +189,7 @@ export async function saveDocumentToSupabase(doc: UploadedDocument) {
   if (!isSupabaseConfigured) return;
 
   try {
-    await supabase.from('documents').upsert({
+    const { error } = await supabase.from('documents').upsert({
       id: doc.id,
       title: doc.title,
       filename: doc.filename,
@@ -192,7 +203,11 @@ export async function saveDocumentToSupabase(doc: UploadedDocument) {
       generated_questions: doc.generatedQuestions,
       study_plan_days: doc.studyPlanDays,
     }, { onConflict: 'id' });
-  } catch (err) {
-    console.error('Failed to save document to Supabase:', err);
+
+    if (error) {
+      console.warn('Supabase document save note:', error.message);
+    }
+  } catch (err: any) {
+    console.warn('Supabase document save note:', err.message || err);
   }
 }

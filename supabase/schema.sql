@@ -1,4 +1,7 @@
--- Supabase Schema for Adaptive Learning OS
+-- =========================================================
+-- Adaptive Learning Platform - Complete Database Schema
+-- Run this in your Supabase SQL Editor (Dashboard -> SQL Editor)
+-- =========================================================
 
 -- 1. Profiles Table
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -96,8 +99,17 @@ ALTER TABLE public.user_concept_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
--- Allow anon and authenticated access (for development and app operation)
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Allow all access to profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Allow all access to user_concept_states" ON public.user_concept_states;
+DROP POLICY IF EXISTS "Allow all access to attempts" ON public.attempts;
+DROP POLICY IF EXISTS "Allow all access to documents" ON public.documents;
+
+-- Create Permissive Access Policies
 CREATE POLICY "Allow all access to profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to user_concept_states" ON public.user_concept_states FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to attempts" ON public.attempts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to documents" ON public.documents FOR ALL USING (true) WITH CHECK (true);
+
+-- Refresh PostgREST Schema Cache
+NOTIFY pgrst, 'reload schema';

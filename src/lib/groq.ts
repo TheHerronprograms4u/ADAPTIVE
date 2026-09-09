@@ -13,6 +13,15 @@ export interface TutorPromptContext {
   conversationHistory?: { role: 'user' | 'model' | 'assistant'; content: string }[];
 }
 
+export const VALID_GROQ_MODELS = [
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.8-27b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.6-27b',
+  'groq/compound',
+  'groq/compound-mini',
+];
+
 export function getGroqApiKey(): string {
   return (
     localStorage.getItem('groq_api_key') ||
@@ -23,7 +32,11 @@ export function getGroqApiKey(): string {
 }
 
 export function getGroqModel(): string {
-  return localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile';
+  const saved = localStorage.getItem('groq_model');
+  if (saved && VALID_GROQ_MODELS.includes(saved)) {
+    return saved;
+  }
+  return 'openai/gpt-oss-120b';
 }
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -84,6 +97,10 @@ Rules:
           model,
           messages: [
             { role: 'system', content: systemInstruction },
+            ...(context.conversationHistory || []).map(m => ({
+              role: m.role === 'model' ? 'assistant' : m.role,
+              content: m.content,
+            })),
             { role: 'user', content: userMessage }
           ],
           temperature: mode === 'deep_dive' ? 0.2 : mode === 'socratic' ? 0.7 : 0.4,

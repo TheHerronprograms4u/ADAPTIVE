@@ -112,9 +112,9 @@ export const SettingsScreen: React.FC = () => {
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
-                { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', badge: 'Recommended', desc: 'Deepest pedagogical reasoning' },
-                { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', badge: 'Fastest', desc: 'Instant sub-second replies' },
-                { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', badge: 'Reasoning', desc: 'Advanced math & proof deduction' },
+                { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', badge: 'Recommended', desc: 'Deepest pedagogical reasoning & reasoning tokens' },
+                { id: 'qwen/qwen3.8-27b', name: 'Qwen 3.8 27B', badge: 'Reasoning', desc: 'Advanced math, proof deduction & speed' },
+                { id: 'openai/gpt-oss-20b', name: 'GPT OSS 20B', badge: 'Fastest', desc: 'Instant sub-second replies' },
               ].map((m) => (
                 <button
                   key={m.id}

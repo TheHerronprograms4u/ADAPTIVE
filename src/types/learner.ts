@@ -61,8 +61,6 @@ export interface LearnerProfile {
   
   // Cognitive & Epistemic profile
   personaType: 'analytical' | 'intuitive' | 'systematic' | 'experimental' | 'socratic';
-  isSimulated?: boolean;
-  simulatedPreset?: 'fast' | 'struggling' | 'inconsistent' | 'overconfident' | 'underconfident';
   
   createdAt: string;
   lastActiveAt: string;

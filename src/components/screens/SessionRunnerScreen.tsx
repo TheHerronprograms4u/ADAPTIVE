@@ -3,6 +3,7 @@ import { useAdaptive } from '../../context/AdaptiveContext';
 import { QuestionRenderer } from '../shared/QuestionRenderer';
 import { MathText } from '../shared/MathText';
 import { ConfidenceRating } from '../../types/assessment';
+import { askGroqTutor } from '../../lib/groq';
 import {
   CheckCircle2,
   Clock,
@@ -139,17 +140,29 @@ export const SessionRunnerScreen: React.FC = () => {
     }
   };
 
-  const handleTeachSubmit = (e: React.FormEvent) => {
+  const handleTeachSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!socraticTeachInput.trim()) return;
+    if (!socraticTeachInput.trim() || isEvaluatingTeach) return;
 
     setIsEvaluatingTeach(true);
-    setTimeout(() => {
-      setTeachFeedback(
-        `### Epistemic Rubric Evaluation: 9.2 / 10\n\n* **Conceptual Grounding:** Excellent synthesis of core invariants.\n* **Precision:** Solid explanation of domain boundaries.\n* **Next Step:** Ready to proceed to the guided scaffolding problems.`
-      );
+    try {
+      const feedback = await askGroqTutor({
+        learnerName: profile.name,
+        educationLevel: profile.educationLevel,
+        conceptName: currentActivity.conceptName,
+        conceptSummary: currentActivity.contentPayload?.theorySummary || currentActivity.objectiveText,
+        learnerMastery: profile.overallMastery,
+        knownMisconceptions: [],
+        mode: 'teach_me',
+        userMessage: socraticTeachInput,
+        conversationHistory: [],
+      });
+      setTeachFeedback(feedback);
+    } catch (err) {
+      console.warn('Evaluation error:', err);
+    } finally {
       setIsEvaluatingTeach(false);
-    }, 1200);
+    }
   };
 
   return (

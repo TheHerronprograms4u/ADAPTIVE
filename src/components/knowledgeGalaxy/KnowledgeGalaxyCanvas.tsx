@@ -165,12 +165,15 @@ export const KnowledgeGalaxyCanvas: React.FC<KnowledgeGalaxyCanvasProps> = ({ on
         ctx.stroke();
 
         // Mastery Progress Arc Ring
-        const masteryAngle = (state.masteryScore || 0.1) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.arc(x, y, radius + 2, -Math.PI / 2, -Math.PI / 2 + masteryAngle);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        const masteryScore = state?.masteryScore ?? 0;
+        if (masteryScore > 0) {
+          const masteryAngle = masteryScore * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(x, y, radius + 2, -Math.PI / 2, -Math.PI / 2 + masteryAngle);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
 
         // Node Label (Short code inside)
         ctx.fillStyle = '#ffffff';

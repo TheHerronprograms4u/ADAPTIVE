@@ -6,8 +6,6 @@ import { DynamicLearningSession, AdaptiveRecommendation } from '../types/engine'
 import { UploadedDocument, ExamPreparationPlan } from '../types/document';
 import { DEFAULT_SUBJECTS } from '../data/defaultSubjects';
 import { DEFAULT_CONCEPTS, DEFAULT_QUESTIONS } from '../data/defaultCurriculum';
-import { DEFAULT_MILESTONES } from '../data/defaultMilestones';
-import { SIMULATED_PRESETS } from '../data/simulatedProfiles';
 import { calculateBKTUpdate, determineMasteryTier, confidenceRatingToScalar, calculateCalibrationScore, computeContinuousDifficulty } from '../lib/learningEngine';
 import { calculateCurrentRetention, processSpacedRepetitionReview } from '../lib/spacedRepetition';
 import { classifyUserError } from '../lib/misconceptionClassifier';
@@ -95,9 +93,6 @@ interface AdaptiveContextType {
   isFocusModeActive: boolean;
   toggleFocusMode: () => void;
   
-  // Simulated Profiles
-  switchSimulatedProfile: (presetKey: 'fast' | 'struggling' | 'overconfident' | 'underconfident') => void;
-  
   // Document Import & Planner
   uploadedDocuments: UploadedDocument[];
   addUploadedDocument: (doc: UploadedDocument) => void;
@@ -116,7 +111,7 @@ interface AdaptiveContextType {
 }
 
 const INITIAL_PROFILE: LearnerProfile = {
-  id: 'learner-' + Date.now(),
+  id: '',
   name: 'Learner',
   avatarSeed: 'learner',
   educationLevel: 'undergraduate',
@@ -137,7 +132,7 @@ const INITIAL_PROFILE: LearnerProfile = {
   overallRetention: 1.0,
   learningMomentum: 0,
   calibrationScore: 0,
-  currentStreakDays: 1,
+  currentStreakDays: 0,
   totalStudyMinutes: 0,
   conceptsMasteredCount: 0,
   totalAttemptsCount: 0,
@@ -152,7 +147,7 @@ function generateInitialStates(): Record<string, UserConceptState> {
   const map: Record<string, UserConceptState> = {};
   DEFAULT_CONCEPTS.forEach((c) => {
     map[c.id] = {
-      userId: 'learner',
+      userId: '',
       conceptId: c.id,
       masteryScore: 0.0,
       confidenceScore: 0.5,
@@ -188,12 +183,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const saved = localStorage.getItem('adaptive_profile');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.id === 'learner-1' || parsed.name === 'Harron') {
-          localStorage.removeItem('adaptive_profile');
-          return INITIAL_PROFILE;
-        }
-        return parsed;
+        return JSON.parse(saved);
       } catch {
         return INITIAL_PROFILE;
       }
@@ -205,17 +195,12 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [activeSubjectId, setActiveSubjectId] = useState<string>('subj-math');
   const [concepts, setConcepts] = useState<Concept[]>(DEFAULT_CONCEPTS);
   const [questions, setQuestions] = useState<Question[]>(DEFAULT_QUESTIONS);
-  const [selectedConceptId, setSelectedConceptId] = useState<string | null>('math-alg-quad');
+  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(DEFAULT_CONCEPTS[0]?.id || null);
   const [userConceptStates, setUserConceptStates] = useState<Record<string, UserConceptState>>(() => {
     const saved = localStorage.getItem('adaptive_concept_states');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed['math-alg-quad']?.masteryScore === 0.68) {
-          localStorage.removeItem('adaptive_concept_states');
-          return generateInitialStates();
-        }
-        return parsed;
+        return JSON.parse(saved);
       } catch {
         return generateInitialStates();
       }
@@ -227,9 +212,73 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [diagnosticState, setDiagnosticState] = useState<DiagnosticAssessmentState | null>(null);
   const [activeExamPlan, setActiveExamPlan] = useState<ExamPreparationPlan | null>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
-  const [milestones, setMilestones] = useState<CognitiveMilestone[]>(DEFAULT_MILESTONES);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isFocusModeActive, setIsFocusModeActive] = useState(false);
+
+  const milestones: CognitiveMilestone[] = React.useMemo(() => {
+    return [
+      {
+        id: 'mile-prereq-mastery',
+        title: 'Foundational Scaffold Architect',
+        description: 'Master all essential prerequisites required for advanced differential calculus.',
+        category: 'mastery',
+        icon: 'Layers',
+        progress: Math.min(1.0, profile.conceptsMasteredCount / 6),
+        target: 6,
+        currentValue: profile.conceptsMasteredCount,
+        unit: 'concepts',
+        unlockedAt: profile.conceptsMasteredCount >= 6 ? 'Unlocked' : undefined,
+      },
+      {
+        id: 'mile-calibration-master',
+        title: 'Epistemic Calibration Master',
+        description: 'Achieve a 90%+ calibration score between subjective confidence and objective correctness.',
+        category: 'calibration',
+        icon: 'Target',
+        progress: Math.min(1.0, (profile.calibrationScore || 0) / 90),
+        target: 90,
+        currentValue: profile.calibrationScore || 0,
+        unit: '%',
+        unlockedAt: (profile.calibrationScore || 0) >= 90 && profile.totalAttemptsCount >= 5 ? 'Unlocked' : undefined,
+      },
+      {
+        id: 'mile-retrieval-streak',
+        title: 'Synaptic Stability Shield',
+        description: 'Maintain high memory retention across concepts with consistent daily practice.',
+        category: 'retention',
+        icon: 'ShieldCheck',
+        progress: Math.min(1.0, profile.currentStreakDays / 14),
+        target: 14,
+        currentValue: profile.currentStreakDays,
+        unit: 'days',
+        unlockedAt: profile.currentStreakDays >= 14 ? 'Unlocked' : undefined,
+      },
+      {
+        id: 'mile-socratic-scholar',
+        title: 'Socratic Epistemic Scholar',
+        description: 'Successfully solve and articulate reasoning across 10 problem attempts.',
+        category: 'challenge',
+        icon: 'GraduationCap',
+        progress: Math.min(1.0, profile.totalAttemptsCount / 10),
+        target: 10,
+        currentValue: profile.totalAttemptsCount,
+        unit: 'attempts',
+        unlockedAt: profile.totalAttemptsCount >= 10 ? 'Unlocked' : undefined,
+      },
+      {
+        id: 'mile-momentum-titan',
+        title: 'Continuous Cognitive Momentum',
+        description: 'Maintain an 85%+ learning momentum index during study sprints.',
+        category: 'consistency',
+        icon: 'Zap',
+        progress: Math.min(1.0, (profile.learningMomentum || 0) / 85),
+        target: 85,
+        currentValue: Math.round(profile.learningMomentum || 0),
+        unit: 'index',
+        unlockedAt: (profile.learningMomentum || 0) >= 85 ? 'Unlocked' : undefined,
+      },
+    ];
+  }, [profile]);
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
@@ -371,17 +420,17 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const existingState = userConceptStates[attemptData.conceptId] || {
       userId: profile.id,
       conceptId: attemptData.conceptId,
-      masteryScore: 0.2,
+      masteryScore: 0.0,
       confidenceScore: 0.5,
-      retentionScore: 0.8,
+      retentionScore: 1.0,
       masteryTier: 'novice',
-      stabilityDays: 1.5,
+      stabilityDays: 1.0,
       difficultyRating: concept?.difficultyBase || 0.5,
       repsCount: 0,
       lapsesCount: 0,
       lastReviewedAt: new Date().toISOString(),
       nextReviewAt: new Date().toISOString(),
-      forgettingProbability: 0.2,
+      forgettingProbability: 0.0,
       totalAttempts: 0,
       correctAttempts: 0,
       accuracyRate: 0,
@@ -637,22 +686,6 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     navigateTo('knowledge_galaxy');
   };
 
-  // Switch Simulated Profile
-  const switchSimulatedProfile = (presetKey: 'fast' | 'struggling' | 'overconfident' | 'underconfident') => {
-    const preset = SIMULATED_PRESETS[presetKey];
-    if (!preset) return;
-    setProfile(preset.profile);
-    setUserConceptStates(prev => {
-      const updated = { ...prev };
-      Object.entries(preset.conceptStates).forEach(([cid, pstate]) => {
-        if (updated[cid]) {
-          updated[cid] = { ...updated[cid], ...pstate } as UserConceptState;
-        }
-      });
-      return updated;
-    });
-  };
-
   const addUploadedDocument = (doc: UploadedDocument) => {
     setUploadedDocuments(prev => [doc, ...prev]);
     saveDocumentToSupabase(doc);
@@ -734,7 +767,6 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsCommandPaletteOpen,
         isFocusModeActive,
         toggleFocusMode,
-        switchSimulatedProfile,
         uploadedDocuments,
         addUploadedDocument,
         activeExamPlan,

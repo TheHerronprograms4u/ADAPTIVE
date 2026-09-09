@@ -29,7 +29,7 @@ export const DashboardScreen: React.FC = () => {
     navigateTo,
     startDynamicSession,
     nextBestAction,
-    switchSimulatedProfile,
+    milestones,
   } = useAdaptive();
 
   const activeConcepts = concepts.filter(c => c.subjectId === activeSubject.id);
@@ -44,6 +44,14 @@ export const DashboardScreen: React.FC = () => {
     const s = userConceptStates[c.id];
     return !s || s.retentionScore < 0.65 || s.isPrerequisiteBottleneck || s.masteryScore < 0.40;
   });
+
+  const primaryConcept = activeConcepts.find(c => (userConceptStates[c.id]?.masteryScore || 0) > 0 && (userConceptStates[c.id]?.masteryScore || 0) < 0.95) || activeConcepts[0];
+  const primaryMastery = Math.round((userConceptStates[primaryConcept?.id]?.masteryScore || 0) * 100);
+
+  const reviewConcept = [...activeConcepts].sort((a, b) => (userConceptStates[a.id]?.retentionScore || 1) - (userConceptStates[b.id]?.retentionScore || 1))[0] || activeConcepts[0];
+  const reviewRetention = Math.round((userConceptStates[reviewConcept?.id]?.retentionScore || 1) * 100);
+
+  const challengeConcept = [...activeConcepts].sort((a, b) => b.difficultyBase - a.difficultyBase)[0] || activeConcepts[0];
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -62,8 +70,8 @@ export const DashboardScreen: React.FC = () => {
               Your system has prepared today's path.
             </h1>
             <p className="text-sm text-zinc-300 leading-relaxed">
-              We recalibrated your memory retention curve and prerequisite dependencies overnight. You have{' '}
-              <span className="font-semibold text-white">5 active learning milestones</span> queued for{' '}
+              We recalibrated your memory retention curve and prerequisite dependencies. You have{' '}
+              <span className="font-semibold text-white">{milestones.filter(m => !m.unlockedAt).length} active learning milestones</span> queued for{' '}
               <span className="font-semibold text-indigo-300">{activeSubject.name}</span>.
             </p>
           </div>
@@ -102,7 +110,8 @@ export const DashboardScreen: React.FC = () => {
           <div className="mt-3 flex items-baseline gap-2">
             <h3 className="text-2xl font-bold text-white font-mono">{profile.learningMomentum}%</h3>
             <span className="text-xs font-medium text-emerald-400 flex items-center">
-              <TrendingUp className="h-3 w-3 mr-0.5" /> +4% today
+              <TrendingUp className="h-3 w-3 mr-0.5" />
+              {profile.learningMomentum > 0 ? (profile.learningMomentum >= 75 ? 'High velocity' : 'Active') : 'Calibrating'}
             </span>
           </div>
           <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
@@ -177,17 +186,17 @@ export const DashboardScreen: React.FC = () => {
                 Continue Learning
               </span>
               <span className="text-xs text-zinc-400 font-mono">
-                {Math.round((userConceptStates['math-alg-quad']?.masteryScore || 0.68) * 100)}% mastery
+                {primaryMastery}% mastery
               </span>
             </div>
-            <h3 className="mt-3 text-lg font-bold text-white">Quadratic Functions & Factoring</h3>
+            <h3 className="mt-3 text-lg font-bold text-white">{primaryConcept?.name || 'Active Concept'}</h3>
             <p className="mt-1 text-xs text-zinc-300 leading-relaxed">
-              Second-degree polynomials, parabolas, vertex forms, and algebraic root derivation.
+              {primaryConcept?.summary || 'Scaffold prerequisites and fundamental mechanisms.'}
             </p>
           </div>
 
           <button
-            onClick={() => navigateTo('practice', { conceptId: 'math-alg-quad' })}
+            onClick={() => primaryConcept && navigateTo('practice', { conceptId: primaryConcept.id })}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-700 transition-all cursor-pointer"
           >
             <span>Continue Scaffolding</span>
@@ -202,22 +211,22 @@ export const DashboardScreen: React.FC = () => {
               <span className="rounded-md border border-amber-500/30 bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-300 uppercase">
                 Recommended Action
               </span>
-              <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-rose-300">
-                High Priority
+              <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${reviewRetention < 70 ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                {reviewRetention < 70 ? 'High Priority' : 'Reinforcement'}
               </span>
             </div>
-            <h3 className="mt-3 text-lg font-bold text-white">Review: Linear Equations & Negative Signs</h3>
+            <h3 className="mt-3 text-lg font-bold text-white">Review: {reviewConcept?.name || 'Key Concept'}</h3>
             <p className="mt-1 text-xs text-zinc-300 leading-relaxed">
-              Retention decayed to 58%. A 3-minute active retrieval prevents negative sign slip contagion into calculus.
+              Retention index at {reviewRetention}%. Active retrieval prevents memory decay across the prerequisite graph.
             </p>
           </div>
 
           <button
-            onClick={() => navigateTo('review_center', { conceptId: 'math-alg-lin-eq' })}
+            onClick={() => reviewConcept && navigateTo('review_center', { conceptId: reviewConcept.id })}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/15 px-4 py-3 text-xs font-semibold text-amber-200 hover:bg-amber-500/25 transition-all cursor-pointer"
           >
             <RotateCcw className="h-4 w-4" />
-            <span>Launch 3-Min Retrieval</span>
+            <span>Launch Retrieval</span>
           </button>
         </div>
 
@@ -228,16 +237,16 @@ export const DashboardScreen: React.FC = () => {
               <span className="rounded-md border border-cyan-500/30 bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300 uppercase">
                 Cognitive Challenge
               </span>
-              <span className="text-xs text-zinc-400 font-mono">0.82 Difficulty</span>
+              <span className="text-xs text-zinc-400 font-mono">{(challengeConcept?.difficultyBase * 100).toFixed(0)}% Difficulty</span>
             </div>
-            <h3 className="mt-3 text-lg font-bold text-white">Can you solve this without calculation?</h3>
+            <h3 className="mt-3 text-lg font-bold text-white">{challengeConcept?.name || 'Advanced Challenge'}</h3>
             <p className="mt-1 text-xs text-zinc-300 leading-relaxed">
-              Test your intuitive rate-of-change mental model against composite derivative chain rule edge cases.
+              {challengeConcept?.summary || 'Test your intuitive mental model against edge cases and composite rules.'}
             </p>
           </div>
 
           <button
-            onClick={() => navigateTo('tutor', { conceptId: 'math-calc-deriv' })}
+            onClick={() => challengeConcept && navigateTo('tutor', { conceptId: challengeConcept.id })}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-4 py-3 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/25 transition-all cursor-pointer"
           >
             <Bot className="h-4 w-4" />

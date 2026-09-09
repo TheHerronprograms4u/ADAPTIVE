@@ -16,9 +16,7 @@ export const FocusModeOverlay: React.FC = () => {
   const [secondsRemaining, setSecondsRemaining] = useState<number>(25 * 60);
   const [isRunning, setIsRunning] = useState<boolean>(true);
   const [focusNote, setFocusNote] = useState<string>('');
-  const [completedTasks, setCompletedTasks] = useState<string[]>([
-    'Derive chain rule for composite differentials',
-  ]);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [newTaskInput, setNewTaskInput] = useState<string>('');
 
   const [quickTutorPrompt, setQuickTutorPrompt] = useState<string>('');
@@ -48,9 +46,9 @@ export const FocusModeOverlay: React.FC = () => {
     if (!quickTutorPrompt.trim()) return;
 
     setIsTutorLoading(true);
-    const conceptName = selectedConcept?.name || 'Calculus Foundations';
-    const conceptSummary = selectedConcept?.summary || 'Foundational mathematical theory';
-    const mastery = selectedConcept ? (userConceptStates[selectedConcept.id]?.masteryScore || 0.7) : 0.7;
+    const conceptName = selectedConcept?.name || 'Curriculum Concept';
+    const conceptSummary = selectedConcept?.summary || 'Core subject knowledge';
+    const mastery = selectedConcept ? (userConceptStates[selectedConcept.id]?.masteryScore ?? 0) : 0;
 
     const answer = await askGroqTutor({
       learnerName: profile.name,

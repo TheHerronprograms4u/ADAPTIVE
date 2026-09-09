@@ -17,7 +17,7 @@ import {
 import confetti from 'canvas-confetti';
 
 export const ExamModeScreen: React.FC = () => {
-  const { questions, activeSubject, navigateTo, submitAttempt } = useAdaptive();
+  const { questions, activeSubject, navigateTo, submitAttempt, profile } = useAdaptive();
 
   const [examStarted, setExamStarted] = useState<boolean>(false);
   const [examFinished, setExamFinished] = useState<boolean>(false);
@@ -53,7 +53,7 @@ export const ExamModeScreen: React.FC = () => {
 
     const newAttempt: UserAttempt = {
       id: `exam-${Date.now()}`,
-      userId: 'harron',
+      userId: profile.id || 'learner',
       questionId: activeQ.id,
       conceptId: activeQ.conceptId,
       userAnswer: answer,
@@ -132,9 +132,55 @@ export const ExamModeScreen: React.FC = () => {
 
   // If exam finished, render the EXAM INTELLIGENCE REPORT
   if (examFinished) {
+    const totalItems = Math.max(1, examAttempts.length);
     const correctCount = examAttempts.filter(a => a.isCorrect).length;
-    const scorePct = Math.round((correctCount / Math.max(1, examAttempts.length)) * 100);
-    const estimatedReadiness = Math.min(99, scorePct + 8);
+    const scorePct = Math.round((correctCount / totalItems) * 100);
+    const estimatedReadiness = Math.min(99, Math.max(10, Math.round(scorePct * 0.95 + 5)));
+
+    // Dynamic calibration gap
+    const totalGap = examAttempts.reduce((acc, att) => {
+      const actualScore = att.isCorrect ? 1.0 : 0.0;
+      return acc + Math.abs(att.confidenceScalar - actualScore);
+    }, 0);
+    const avgGapPct = Math.round((totalGap / totalItems) * 100);
+
+    // Concept stats from exam attempts
+    const conceptStats: Record<string, { name: string; total: number; correct: number }> = {};
+    examAttempts.forEach(att => {
+      const q = questions.find(item => item.id === att.questionId);
+      const name = q?.conceptName || att.conceptId;
+      if (!conceptStats[att.conceptId]) {
+        conceptStats[att.conceptId] = { name, total: 0, correct: 0 };
+      }
+      conceptStats[att.conceptId].total += 1;
+      if (att.isCorrect) conceptStats[att.conceptId].correct += 1;
+    });
+
+    const statList = Object.values(conceptStats);
+    const strongest = [...statList].sort((a, b) => (b.correct / b.total) - (a.correct / a.total))[0];
+    const weakest = [...statList].sort((a, b) => (a.correct / a.total) - (b.correct / b.total))[0];
+
+    const strongestDomain = strongest ? `${strongest.name}` : activeSubject.name;
+    const weakestArea = weakest && weakest.correct < weakest.total
+      ? `${weakest.name}`
+      : 'None (Perfect Accuracy)';
+
+    // Misconceptions detected
+    const misconceptionsFound = examAttempts
+      .filter(a => !a.isCorrect && a.detectedMisconception)
+      .map(a => a.detectedMisconception!);
+
+    // Dynamic Action Items
+    const actionItems: string[] = [];
+    if (weakest && weakest.correct < weakest.total) {
+      actionItems.push(`Complete a focused review session on ${weakest.name} to reinforce core mechanisms.`);
+    }
+    if (misconceptionsFound.length > 0) {
+      actionItems.push(`Review the ${misconceptionsFound[0].title} remediation advice before the next exam.`);
+    }
+    if (actionItems.length === 0) {
+      actionItems.push(`Maintain your high mastery with regular spaced retrieval sessions across ${activeSubject.name}.`);
+    }
 
     return (
       <div className="mx-auto max-w-3xl space-y-6 pb-12 animate-in zoom-in-95 duration-200">
@@ -163,28 +209,40 @@ export const ExamModeScreen: React.FC = () => {
             </div>
             <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-3">
               <span className="text-zinc-500 block text-[10px] uppercase">Strongest Domain</span>
-              <span className="text-sm font-bold text-indigo-300 truncate block">Algebra & Limits</span>
+              <span className="text-sm font-bold text-indigo-300 truncate block">{strongestDomain}</span>
             </div>
             <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-3">
               <span className="text-zinc-500 block text-[10px] uppercase">Weakest Area</span>
-              <span className="text-sm font-bold text-amber-300 truncate block">Chain Derivatives</span>
+              <span className="text-sm font-bold text-amber-300 truncate block">{weakestArea}</span>
             </div>
             <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-3">
               <span className="text-zinc-500 block text-[10px] uppercase">Calibration Gap</span>
-              <span className="text-lg font-bold text-cyan-400">8%</span>
+              <span className="text-lg font-bold text-cyan-400">{avgGapPct}%</span>
             </div>
           </div>
 
-          {/* High-Risk Misconception Flag */}
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-5 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-rose-300 uppercase">
-              <AlertTriangle className="h-4 w-4 text-rose-400" />
-              <span>High-Risk Misconception Detected</span>
+          {/* High-Risk Misconception Flag if any */}
+          {misconceptionsFound.length > 0 ? (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-5 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-rose-300 uppercase">
+                <AlertTriangle className="h-4 w-4 text-rose-400" />
+                <span>Misconception Detected: {misconceptionsFound[0].title}</span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                {misconceptionsFound[0].explanation}
+              </p>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              <strong>Negative Coefficient Distribution:</strong> Two errors occurred when distributing negative scalars across parentheses in multi-step equations.
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300 uppercase">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <span>Clean Epistemic Execution</span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                No high-risk misconceptions or persistent error patterns were triggered during this assessment.
+              </p>
+            </div>
+          )}
 
           {/* Recommended Action Plan */}
           <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-5 space-y-3">
@@ -193,14 +251,12 @@ export const ExamModeScreen: React.FC = () => {
               <span>Recommended Action Items</span>
             </div>
             <div className="space-y-2 text-xs text-zinc-300">
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-                <span>Complete 2 targeted review sessions on Factoring & Linear Signs before exam day.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-                <span>Practice 3 multi-variable chain rule problems in AI Socratic Tutor mode.</span>
-              </div>
+              {actionItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 shrink-0" />
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
           </div>
 

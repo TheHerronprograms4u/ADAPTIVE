@@ -44,20 +44,22 @@ export const AITutorScreen: React.FC = () => {
     userConceptStates,
   } = useAdaptive();
 
+  const currentConcept = concepts.find(c => c.id === selectedConceptId) || concepts[0];
+
   const [activeMode, setActiveMode] = useState<TutorMode>('socratic');
   const [messages, setMessages] = useState<TutorMessage[]>([
     {
       id: 'init-msg',
       sender: 'tutor',
       mode: 'socratic',
-      text: `Hello ${profile.name.split(' ')[0]}. I am your personalized Socratic tutor.\n\nI have access to your continuous Bayesian Knowledge graph and know your current mastery on **${
-        concepts.find(c => c.id === selectedConceptId)?.name || 'Calculus Foundations'
-      }** is **${Math.round((userConceptStates[selectedConceptId || 'math-alg-quad']?.masteryScore || 0.68) * 100)}%**.\n\nHow would you like to explore this concept today? You can ask a direct question, request an intuitive analogy, or test your reasoning in **Teach Me** mode.`,
+      text: `Hello ${(profile.name || 'Learner').split(' ')[0]}. I am your personalized Socratic tutor.\n\nI have access to your continuous Bayesian Knowledge graph and know your current mastery on **${
+        currentConcept?.name || 'this domain'
+      }** is **${Math.round((userConceptStates[currentConcept?.id]?.masteryScore ?? 0) * 100)}%**.\n\nHow would you like to explore this concept today? You can ask a direct question, request an intuitive analogy, or test your reasoning in **Teach Me** mode.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       suggestedFollowUps: [
-        'Can you give me an intuitive analogy for the chain rule?',
-        'Why does the derivative of e^x equal itself?',
-        'Challenge me with a tricky boundary problem.',
+        'Can you give me an intuitive analogy for the core principles?',
+        'Why does this theorem work from first principles?',
+        'Challenge me with a diagnostic problem.',
       ],
     },
   ]);
@@ -68,8 +70,6 @@ export const AITutorScreen: React.FC = () => {
   const [isAutoSpeak, setIsAutoSpeak] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  const currentConcept = concepts.find(c => c.id === selectedConceptId) || concepts[0];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -114,7 +114,7 @@ export const AITutorScreen: React.FC = () => {
     setInputPrompt('');
     setIsLoading(true);
 
-    const mastery = userConceptStates[currentConcept.id]?.masteryScore || 0.65;
+    const mastery = userConceptStates[currentConcept.id]?.masteryScore ?? 0;
     const misconceptions = currentConcept.misconceptions.map(m => m.name);
 
     try {

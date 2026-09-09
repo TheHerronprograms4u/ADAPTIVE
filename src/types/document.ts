@@ -30,7 +30,7 @@ export interface ExamPreparationPlan {
     targetConcepts: string[];
     estimatedMinutes: number;
     isCompleted: boolean;
-    priority: 'critical' | 'high' | 'medium';
+    priority: 'critical' | 'high' | 'medium' | 'low';
     rationale: string;
   }[];
 }

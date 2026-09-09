@@ -18,10 +18,8 @@ import {
 export const DocumentImportScreen: React.FC = () => {
   const { addUploadedDocument, navigateTo } = useAdaptive();
 
-  const [docTitle, setDocTitle] = useState<string>('Cellular Biology & Molecular Genetics');
-  const [docText, setDocText] = useState<string>(
-    `Cellular respiration is a metabolic pathway that breaks down glucose and produces ATP. The stages of cellular respiration include glycolysis, pyruvate oxidation, the citric acid (Krebs) cycle, and oxidative phosphorylation. In oxidative phosphorylation, the electron transport chain creates an electrochemical proton gradient across the inner mitochondrial membrane, which drives ATP synthesis via ATP synthase.`
-  );
+  const [docTitle, setDocTitle] = useState<string>('');
+  const [docText, setDocText] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [parsedResult, setParsedResult] = useState<UploadedDocument | null>(null);
 
@@ -127,6 +125,7 @@ export const DocumentImportScreen: React.FC = () => {
               type="text"
               value={docTitle}
               onChange={(e) => setDocTitle(e.target.value)}
+              placeholder="e.g. Cellular Biology & Molecular Genetics"
               className="glass-input w-full rounded-xl px-4 py-2.5 text-xs text-white"
             />
           </div>

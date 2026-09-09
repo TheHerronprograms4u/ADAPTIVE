@@ -25,12 +25,12 @@ export const ReviewCenterScreen: React.FC = () => {
 
   // Sort concepts by retention decay urgency (lowest retention first)
   const sortedConcepts = [...concepts].sort((a, b) => {
-    const rA = userConceptStates[a.id]?.retentionScore || 0.8;
-    const rB = userConceptStates[b.id]?.retentionScore || 0.8;
+    const rA = userConceptStates[a.id]?.retentionScore ?? 1.0;
+    const rB = userConceptStates[b.id]?.retentionScore ?? 1.0;
     return rA - rB;
   });
 
-  const dueConcepts = sortedConcepts.filter(c => (userConceptStates[c.id]?.retentionScore || 1.0) < 0.85);
+  const dueConcepts = sortedConcepts.filter(c => (userConceptStates[c.id]?.retentionScore ?? 1.0) < 0.85);
 
   const activeReviewConcept = concepts.find(c => c.id === activeReviewConceptId) || null;
 

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const ProfileScreen: React.FC = () => {
-  const { profile, switchSimulatedProfile, activeSubject } = useAdaptive();
+  const { profile } = useAdaptive();
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -64,79 +64,51 @@ export const ProfileScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Simulated Profiles Sandbox Switcher Box */}
+      {/* Real Cognitive Performance & Diagnostics Metrics */}
       <div className="rounded-3xl border border-indigo-500/30 bg-zinc-900/60 p-6 backdrop-blur-xl space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <UserCheck className="h-4 w-4 text-indigo-400" />
-            <span>Simulated Learner Evaluator Sandbox</span>
+            <Sparkles className="h-4 w-4 text-indigo-400" />
+            <span>Continuous Epistemic Diagnostics</span>
           </h3>
-          <span className="text-xs text-indigo-400 font-mono">Empirical Verification</span>
+          <span className="text-xs text-indigo-400 font-mono">Live Bayesian Estimation</span>
         </div>
         <p className="text-xs text-zinc-300 leading-relaxed">
-          Switch between preset learner archetypes to verify how the Bayesian Knowledge Tracing engine, continuous difficulty scalar, and recommendation engine adapt dynamically.
+          Your cognitive profile is calibrated dynamically with every problem attempt, response latency measurement, and confidence rating.
         </p>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <button
-            onClick={() => switchSimulatedProfile('fast')}
-            className={`rounded-2xl border p-4 text-left transition-all ${
-              profile.simulatedPreset === 'fast'
-                ? 'border-indigo-500 bg-indigo-500/20 text-white ring-1 ring-indigo-500'
-                : 'border-white/5 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800'
-            }`}
-          >
+          <div className="rounded-2xl border border-white/5 bg-zinc-950/50 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs">⚡ Fast Learner</span>
-              <span className="text-[10px] font-mono text-emerald-400">94% Acc</span>
+              <span className="font-bold text-xs text-zinc-200">Problem Accuracy</span>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">{Math.round(profile.accuracyRate * 100)}%</span>
             </div>
-            <p className="text-[11px] text-zinc-400">Rapid response speed, accelerated difficulty ramp-up.</p>
-          </button>
+            <p className="text-[11px] text-zinc-400">{profile.totalAttemptsCount} total attempts recorded.</p>
+          </div>
 
-          <button
-            onClick={() => switchSimulatedProfile('struggling')}
-            className={`rounded-2xl border p-4 text-left transition-all ${
-              profile.simulatedPreset === 'struggling'
-                ? 'border-amber-500 bg-amber-500/20 text-white ring-1 ring-amber-500'
-                : 'border-white/5 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800'
-            }`}
-          >
+          <div className="rounded-2xl border border-white/5 bg-zinc-950/50 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs">🐢 Struggling Learner</span>
-              <span className="text-[10px] font-mono text-amber-400">36% Acc</span>
+              <span className="font-bold text-xs text-zinc-200">Fluency Latency</span>
+              <span className="text-[10px] font-mono text-indigo-400 font-bold">{profile.averageResponseTimeSeconds > 0 ? `${profile.averageResponseTimeSeconds.toFixed(1)}s` : '—'}</span>
             </div>
-            <p className="text-[11px] text-zinc-400">Persistent prerequisite bottlenecks & negative sign slips.</p>
-          </button>
+            <p className="text-[11px] text-zinc-400">Mean retrieval response time.</p>
+          </div>
 
-          <button
-            onClick={() => switchSimulatedProfile('overconfident')}
-            className={`rounded-2xl border p-4 text-left transition-all ${
-              profile.simulatedPreset === 'overconfident'
-                ? 'border-rose-500 bg-rose-500/20 text-white ring-1 ring-rose-500'
-                : 'border-white/5 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800'
-            }`}
-          >
+          <div className="rounded-2xl border border-white/5 bg-zinc-950/50 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs">🎯 Overconfident</span>
-              <span className="text-[10px] font-mono text-rose-400">42% Acc</span>
+              <span className="font-bold text-xs text-zinc-200">Meta-Calibration</span>
+              <span className="text-[10px] font-mono text-cyan-400 font-bold">{profile.calibrationScore > 0 ? `${profile.calibrationScore}%` : '—'}</span>
             </div>
-            <p className="text-[11px] text-zinc-400">Rates high confidence on incorrect answers (Calibration flag).</p>
-          </button>
+            <p className="text-[11px] text-zinc-400">Subjective confidence vs accuracy alignment.</p>
+          </div>
 
-          <button
-            onClick={() => switchSimulatedProfile('underconfident')}
-            className={`rounded-2xl border p-4 text-left transition-all ${
-              profile.simulatedPreset === 'underconfident'
-                ? 'border-cyan-500 bg-cyan-500/20 text-white ring-1 ring-cyan-500'
-                : 'border-white/5 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800'
-            }`}
-          >
+          <div className="rounded-2xl border border-white/5 bg-zinc-950/50 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-xs">🔍 Underconfident</span>
-              <span className="text-[10px] font-mono text-cyan-400">91% Acc</span>
+              <span className="font-bold text-xs text-zinc-200">Total Focus Time</span>
+              <span className="text-[10px] font-mono text-amber-400 font-bold">{profile.totalStudyMinutes} mins</span>
             </div>
-            <p className="text-[11px] text-zinc-400">High accuracy but low subjective confidence ratings.</p>
-          </button>
+            <p className="text-[11px] text-zinc-400">{profile.conceptsMasteredCount} concepts fully mastered.</p>
+          </div>
         </div>
       </div>
 

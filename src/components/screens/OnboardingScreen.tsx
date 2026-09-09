@@ -83,7 +83,7 @@ export const OnboardingScreen: React.FC = () => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Harron"
+              placeholder="e.g. Alex"
               className="glass-input w-full rounded-xl px-4 py-3 text-sm text-white"
             />
           </div>

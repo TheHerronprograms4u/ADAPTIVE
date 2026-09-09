@@ -52,7 +52,6 @@ export const Sidebar: React.FC = () => {
     subjects,
     activeSubjectId,
     setActiveSubjectId,
-    switchSimulatedProfile,
   } = useAdaptive();
 
   const getSubjectIcon = (iconName: string) => {
@@ -147,51 +146,6 @@ export const Sidebar: React.FC = () => {
             </button>
           );
         })}
-      </div>
-
-      {/* Simulated Profile Sandbox Switcher */}
-      <div className="mt-3 rounded-xl border border-white/10 bg-zinc-900/60 p-2.5">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-            <UserCheck className="h-3 w-3 text-indigo-400" />
-            <span>Simulated Learner</span>
-          </span>
-          <span className="text-[9px] text-indigo-400 font-mono">Sandbox</span>
-        </div>
-        <div className="grid grid-cols-2 gap-1 text-[11px]">
-          <button
-            onClick={() => switchSimulatedProfile('fast')}
-            className={`rounded px-1.5 py-1 text-left font-medium transition-colors ${
-              profile.simulatedPreset === 'fast' ? 'bg-indigo-500/30 text-indigo-200 border border-indigo-500/40' : 'bg-zinc-950/40 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            ⚡ Fast Learner
-          </button>
-          <button
-            onClick={() => switchSimulatedProfile('struggling')}
-            className={`rounded px-1.5 py-1 text-left font-medium transition-colors ${
-              profile.simulatedPreset === 'struggling' ? 'bg-amber-500/30 text-amber-200 border border-amber-500/40' : 'bg-zinc-950/40 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            🐢 Struggling
-          </button>
-          <button
-            onClick={() => switchSimulatedProfile('overconfident')}
-            className={`rounded px-1.5 py-1 text-left font-medium transition-colors ${
-              profile.simulatedPreset === 'overconfident' ? 'bg-rose-500/30 text-rose-200 border border-rose-500/40' : 'bg-zinc-950/40 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            🎯 Overconfident
-          </button>
-          <button
-            onClick={() => switchSimulatedProfile('underconfident')}
-            className={`rounded px-1.5 py-1 text-left font-medium transition-colors ${
-              profile.simulatedPreset === 'underconfident' ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-500/40' : 'bg-zinc-950/40 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            🔍 Underconfident
-          </button>
-        </div>
       </div>
 
       {/* Momentum Footer Card */}

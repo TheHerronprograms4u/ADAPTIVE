@@ -78,7 +78,15 @@ export const AchievementsScreen: React.FC = () => {
           <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
             Calibration Tier
           </span>
-          <h3 className="mt-2 text-2xl font-bold text-indigo-400 font-mono">Tier IV</h3>
+          <h3 className="mt-2 text-2xl font-bold text-indigo-400 font-mono">
+            {profile.calibrationScore >= 90
+              ? 'Tier I'
+              : profile.calibrationScore >= 75
+              ? 'Tier II'
+              : profile.calibrationScore >= 50
+              ? 'Tier III'
+              : 'Tier IV'}
+          </h3>
           <p className="text-[10px] text-zinc-500 mt-1">{profile.calibrationScore}% meta-accuracy</p>
         </div>
       </div>

@@ -21,6 +21,7 @@ export const DiagnosticScreen: React.FC = () => {
     finishDiagnostic,
     activeSubject,
     startDiagnostic,
+    concepts,
   } = useAdaptive();
 
   if (!diagnosticState) {
@@ -103,27 +104,43 @@ export const DiagnosticScreen: React.FC = () => {
           </div>
 
           {/* Diagnostic Strengths & Bottlenecks */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-left">
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300 uppercase">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                <span>Verified Strengths</span>
-              </div>
-              <p className="text-xs text-zinc-300">
-                Solid foundational arithmetic mechanics and rapid equation balancing fluency.
-              </p>
-            </div>
+          {(() => {
+            const strengthNames = diagnosticState.detectedStrengths
+              .map(cid => concepts.find(c => c.id === cid)?.name)
+              .filter(Boolean);
 
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-300 uppercase">
-                <ShieldAlert className="h-4 w-4 text-amber-400" />
-                <span>Targeted Prerequisite Focus</span>
+            const weakNames = diagnosticState.detectedWeakPrerequisites
+              .map(cid => concepts.find(c => c.id === cid)?.name)
+              .filter(Boolean);
+
+            return (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-left">
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300 uppercase">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    <span>Verified Strengths</span>
+                  </div>
+                  <p className="text-xs text-zinc-300">
+                    {strengthNames.length > 0
+                      ? `Demonstrated solid conceptual mastery on: ${strengthNames.join(', ')}.`
+                      : `Core baseline mechanics calibrated across ${activeSubject.name}.`}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-300 uppercase">
+                    <ShieldAlert className="h-4 w-4 text-amber-400" />
+                    <span>Targeted Prerequisite Focus</span>
+                  </div>
+                  <p className="text-xs text-zinc-300">
+                    {weakNames.length > 0
+                      ? `Recommended scaffolded reinforcement on: ${weakNames.join(', ')}.`
+                      : 'No critical prerequisite bottlenecks flagged; ready for direct advancement.'}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-zinc-300">
-                Negative multiplier sign distribution and composite derivative peeling.
-              </p>
-            </div>
-          </div>
+            );
+          })()}
 
           <button
             onClick={finishDiagnostic}

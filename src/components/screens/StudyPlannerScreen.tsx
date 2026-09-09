@@ -15,52 +15,84 @@ import {
 } from 'lucide-react';
 
 export const StudyPlannerScreen: React.FC = () => {
-  const { concepts, userConceptStates, activeSubject, navigateTo } = useAdaptive();
+  const { concepts, userConceptStates, activeSubject, profile, navigateTo } = useAdaptive();
 
-  const [examName, setExamName] = useState<string>('Advanced Calculus Final Examination');
-  const [daysRemaining, setDaysRemaining] = useState<number>(14);
-  const [dailyMinutes, setDailyMinutes] = useState<number>(30);
+  const activeConcepts = concepts.filter(c => c.subjectId === activeSubject.id);
+
+  const [examName, setExamName] = useState<string>(
+    profile.examName || `${activeSubject.name} Comprehensive Mastery`
+  );
+  const [daysRemaining, setDaysRemaining] = useState<number>(
+    Math.max(7, activeConcepts.length + 2)
+  );
+  const [dailyMinutes, setDailyMinutes] = useState<number>(
+    profile.preferredSessionMinutes || 25
+  );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
-  // Dynamic 14-day timetable plan
-  const [studyPlan, setStudyPlan] = useState<ExamPreparationPlan['dailyBreakdown']>([
-    { dayNumber: 1, date: 'Day 1 (Today)', focusTopic: 'Variables & Expressions (ALG.1)', targetConcepts: ['math-alg-vars'], estimatedMinutes: 25, isCompleted: true, priority: 'critical', rationale: 'Foundation prerequisite audit.' },
-    { dayNumber: 2, date: 'Day 2', focusTopic: 'Linear Equations & Systems (ALG.2)', targetConcepts: ['math-alg-lin-eq'], estimatedMinutes: 30, isCompleted: true, priority: 'critical', rationale: 'Strengthen negative sign distributions.' },
-    { dayNumber: 3, date: 'Day 3', focusTopic: 'Quadratic Functions & Factoring (ALG.3)', targetConcepts: ['math-alg-quad'], estimatedMinutes: 30, isCompleted: false, priority: 'high', rationale: 'Master root branches and vertex transformations.' },
-    { dayNumber: 4, date: 'Day 4', focusTopic: 'Limits & Epsilon-Delta Formalism (CALC.1)', targetConcepts: ['math-calc-limits'], estimatedMinutes: 35, isCompleted: false, priority: 'high', rationale: 'Core transition into continuous calculus.' },
-    { dayNumber: 5, date: 'Day 5', focusTopic: 'Derivatives & Power Rules (CALC.2)', targetConcepts: ['math-calc-deriv'], estimatedMinutes: 30, isCompleted: false, priority: 'critical', rationale: 'Instantaneous rates of change derivation.' },
-    { dayNumber: 6, date: 'Day 6', focusTopic: 'Chain Rule & Composite Functions', targetConcepts: ['math-calc-deriv'], estimatedMinutes: 35, isCompleted: false, priority: 'critical', rationale: 'Peeling composite function differentials.' },
-    { dayNumber: 7, date: 'Day 7', focusTopic: 'Interleaved Spaced Review & Diagnostic Quiz', targetConcepts: ['math-alg-quad', 'math-calc-deriv'], estimatedMinutes: 40, isCompleted: false, priority: 'high', rationale: 'Mid-sprint calibration check.' },
-    { dayNumber: 8, date: 'Day 8', focusTopic: 'Definite & Indefinite Integrals (CALC.3)', targetConcepts: ['math-calc-integrals'], estimatedMinutes: 35, isCompleted: false, priority: 'critical', rationale: 'Fundamental Theorem of Calculus.' },
-    { dayNumber: 9, date: 'Day 9', focusTopic: 'Integration by Substitution', targetConcepts: ['math-calc-integrals'], estimatedMinutes: 30, isCompleted: false, priority: 'high', rationale: 'Reversing composite derivative operations.' },
-    { dayNumber: 10, date: 'Day 10', focusTopic: 'Applications: Rates & Accumulations', targetConcepts: ['math-calc-deriv', 'math-calc-integrals'], estimatedMinutes: 35, isCompleted: false, priority: 'medium', rationale: 'Word problem modeling and boundary units.' },
-    { dayNumber: 11, date: 'Day 11', focusTopic: 'Comprehensive Mock Exam Simulation 1', targetConcepts: ['math-calc-limits', 'math-calc-deriv', 'math-calc-integrals'], estimatedMinutes: 45, isCompleted: false, priority: 'critical', rationale: 'Timed pressure simulation.' },
-    { dayNumber: 12, date: 'Day 12', focusTopic: 'Misconception Targeted Remediation', targetConcepts: ['math-alg-lin-eq', 'math-calc-deriv'], estimatedMinutes: 30, isCompleted: false, priority: 'high', rationale: 'Fix errors flagged in Mock Exam 1.' },
-    { dayNumber: 13, date: 'Day 13', focusTopic: 'Light Spaced Review & Formula Memory Refresh', targetConcepts: ['math-alg-vars', 'math-calc-integrals'], estimatedMinutes: 20, isCompleted: false, priority: 'medium', rationale: 'Cognitive consolidation before test day.' },
-    { dayNumber: 14, date: 'Day 14', focusTopic: 'Final Readiness Check & Peak Performance', targetConcepts: ['math-calc-deriv'], estimatedMinutes: 15, isCompleted: false, priority: 'critical', rationale: 'Final mental calibration and confidence anchoring.' },
-  ]);
+  // Generate dynamic plan from active subject concepts
+  const generateDynamicPlan = (): ExamPreparationPlan['dailyBreakdown'] => {
+    const list = activeConcepts.map((c, idx) => {
+      const state = userConceptStates[c.id];
+      const mastery = state?.masteryScore ?? 0;
+      const retention = state?.retentionScore ?? 1.0;
+      const isCompleted = mastery >= 0.8;
+
+      let priority: 'critical' | 'high' | 'medium' | 'low' = 'medium';
+      let rationale = `Core concept progression in ${activeSubject.name}.`;
+
+      if (retention < 0.65) {
+        priority = 'critical';
+        rationale = 'Urgent memory consolidation: Spaced retrieval decay alert.';
+      } else if (mastery < 0.3) {
+        priority = 'high';
+        rationale = 'Foundational building block: Establish core procedural intuition.';
+      } else if (isCompleted) {
+        priority = 'low';
+        rationale = 'Mastered concept: Retained in long-term memory lattice.';
+      }
+
+      return {
+        dayNumber: idx + 1,
+        date: `Day ${idx + 1}`,
+        focusTopic: `${c.name} (${c.shortCode})`,
+        targetConcepts: [c.id],
+        estimatedMinutes: Math.round(15 + c.difficultyBase * 20),
+        isCompleted,
+        priority,
+        rationale,
+      };
+    });
+
+    // Add final synthesis review day
+    list.push({
+      dayNumber: list.length + 1,
+      date: `Day ${list.length + 1}`,
+      focusTopic: `${activeSubject.name} Comprehensive Synthesis & Mock Exam`,
+      targetConcepts: activeConcepts.map(c => c.id),
+      estimatedMinutes: 45,
+      isCompleted: profile.overallMastery >= 0.9,
+      priority: 'critical',
+      rationale: 'Timed interleaved diagnostic across all curriculum units.',
+    });
+
+    return list;
+  };
+
+  const [studyPlan, setStudyPlan] = useState<ExamPreparationPlan['dailyBreakdown']>(generateDynamicPlan);
 
   const handleRecalculatePlan = () => {
     setIsGenerating(true);
     setTimeout(() => {
-      // Intelligently rearrange based on userConceptStates
-      const updated = studyPlan.map(day => {
-        if (day.dayNumber === 3) {
-          return {
-            ...day,
-            rationale: 'Dynamically adjusted: Added extra 10m factoring remediation due to recent quiz slips.',
-            estimatedMinutes: 40,
-          };
-        }
-        return day;
-      });
-      setStudyPlan(updated);
+      setStudyPlan(generateDynamicPlan());
       setIsGenerating(false);
-    }, 1000);
+    }, 600);
   };
 
   const completedDays = studyPlan.filter(d => d.isCompleted).length;
-  const progressPct = Math.round((completedDays / studyPlan.length) * 100);
+  const progressPct = studyPlan.length > 0 ? Math.round((completedDays / studyPlan.length) * 100) : 0;
+  const firstIncomplete = studyPlan.find(d => !d.isCompleted);
+  const activeTodayDayNumber = firstIncomplete ? firstIncomplete.dayNumber : (studyPlan[0]?.dayNumber || 1);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -106,7 +138,7 @@ export const StudyPlannerScreen: React.FC = () => {
             </div>
             <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-2.5 px-3 text-center">
               <span className="text-zinc-500 block text-[10px] uppercase">Estimated Readiness</span>
-              <span className="text-sm font-bold text-emerald-400">91%</span>
+              <span className="text-sm font-bold text-emerald-400">{Math.round((profile.overallMastery ?? 0) * 100)}%</span>
             </div>
           </div>
         </div>
@@ -134,7 +166,7 @@ export const StudyPlannerScreen: React.FC = () => {
 
         <div className="space-y-2.5">
           {studyPlan.map((day) => {
-            const isToday = day.dayNumber === 3; // Mock active today
+            const isToday = day.dayNumber === activeTodayDayNumber;
 
             return (
               <div

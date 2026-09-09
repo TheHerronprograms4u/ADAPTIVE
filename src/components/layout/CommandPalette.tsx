@@ -20,7 +20,6 @@ export const CommandPalette: React.FC = () => {
     setIsCommandPaletteOpen,
     concepts,
     navigateTo,
-    switchSimulatedProfile,
     startDynamicSession,
   } = useAdaptive();
 
@@ -144,31 +143,6 @@ export const CommandPalette: React.FC = () => {
               </span>
             </button>
           ))}
-
-          {/* Simulated Learners Section */}
-          <div className="mt-3 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-            Simulated Test Learner Sandbox
-          </div>
-          <div className="grid grid-cols-2 gap-1.5 px-1 pb-1">
-            <button
-              onClick={() => {
-                switchSimulatedProfile('fast');
-                setIsCommandPaletteOpen(false);
-              }}
-              className="rounded-lg border border-white/5 bg-zinc-950/60 px-2.5 py-1.5 text-left text-xs text-zinc-300 hover:bg-indigo-600 hover:text-white"
-            >
-              ⚡ Fast Learner (94% Acc)
-            </button>
-            <button
-              onClick={() => {
-                switchSimulatedProfile('struggling');
-                setIsCommandPaletteOpen(false);
-              }}
-              className="rounded-lg border border-white/5 bg-zinc-950/60 px-2.5 py-1.5 text-left text-xs text-zinc-300 hover:bg-amber-600 hover:text-white"
-            >
-              🐢 Struggling Learner (Prereq Gaps)
-            </button>
-          </div>
         </div>
 
         {/* Footer info */}

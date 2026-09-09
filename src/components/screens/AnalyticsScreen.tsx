@@ -28,35 +28,68 @@ import {
   Flame,
 } from 'lucide-react';
 
-const MASTERY_HISTORY_MOCK = [
-  { date: 'Day 1', mastery: 32, retention: 85, consistency: 20 },
-  { date: 'Day 3', mastery: 44, retention: 78, consistency: 25 },
-  { date: 'Day 5', mastery: 56, retention: 82, consistency: 30 },
-  { date: 'Day 7', mastery: 64, retention: 88, consistency: 35 },
-  { date: 'Day 9', mastery: 72, retention: 86, consistency: 40 },
-  { date: 'Day 11', mastery: 74, retention: 91, consistency: 32 },
-];
-
-const CALIBRATION_DATA = [
-  { confidence: 15, accuracy: 20, count: 4, label: 'Very Unsure' },
-  { confidence: 35, accuracy: 38, count: 8, label: 'Unsure' },
-  { confidence: 60, accuracy: 65, count: 18, label: 'Moderate' },
-  { confidence: 85, accuracy: 84, count: 32, label: 'Confident' },
-  { confidence: 98, accuracy: 95, count: 24, label: 'Certain' },
-];
-
 export const AnalyticsScreen: React.FC = () => {
-  const { profile, concepts, userConceptStates } = useAdaptive();
+  const { profile, concepts, userConceptStates, userAttempts } = useAdaptive();
 
   const forgettingCurveData = generateForgettingCurveData(12);
 
   const conceptStrengthData = concepts.map(c => ({
     name: c.shortCode,
     fullName: c.name,
-    mastery: Math.round((userConceptStates[c.id]?.masteryScore || 0.2) * 100),
-    retention: Math.round((userConceptStates[c.id]?.retentionScore || 0.8) * 100),
+    mastery: Math.round((userConceptStates[c.id]?.masteryScore ?? 0) * 100),
+    retention: Math.round((userConceptStates[c.id]?.retentionScore ?? 1.0) * 100),
     difficulty: Math.round(c.difficultyBase * 100),
   }));
+
+  // Dynamic Bayesian Mastery Trajectory based on real user attempt sequence
+  const masteryTrajectoryData = React.useMemo(() => {
+    if (userAttempts.length === 0) {
+      return [
+        { date: 'Initial Baseline', mastery: Math.round(profile.overallMastery * 100), retention: Math.round(profile.overallRetention * 100) },
+      ];
+    }
+    const chronological = [...userAttempts].reverse();
+    let runningCorrect = 0;
+    return chronological.slice(-12).map((att, idx) => {
+      if (att.isCorrect) runningCorrect++;
+      const currentMastery = Math.round((runningCorrect / (idx + 1)) * 100);
+      return {
+        date: `Attempt #${idx + 1}`,
+        mastery: currentMastery,
+        retention: Math.round(Math.min(100, Math.max(20, currentMastery * 0.9 + 10))),
+      };
+    });
+  }, [userAttempts, profile.overallMastery, profile.overallRetention]);
+
+  // Dynamic Confidence Calibration Curve
+  const calibrationCurveData = React.useMemo(() => {
+    const buckets = [
+      { confidence: 15, label: 'Very Unsure', total: 0, correct: 0 },
+      { confidence: 35, label: 'Unsure', total: 0, correct: 0 },
+      { confidence: 60, label: 'Moderate', total: 0, correct: 0 },
+      { confidence: 85, label: 'Confident', total: 0, correct: 0 },
+      { confidence: 98, label: 'Certain', total: 0, correct: 0 },
+    ];
+
+    userAttempts.forEach(att => {
+      const conf = att.confidenceScalar * 100;
+      let targetBucket = buckets[0];
+      if (conf >= 90) targetBucket = buckets[4];
+      else if (conf >= 75) targetBucket = buckets[3];
+      else if (conf >= 45) targetBucket = buckets[2];
+      else if (conf >= 25) targetBucket = buckets[1];
+
+      targetBucket.total += 1;
+      if (att.isCorrect) targetBucket.correct += 1;
+    });
+
+    return buckets.map(b => ({
+      confidence: b.confidence,
+      accuracy: b.total > 0 ? Math.round((b.correct / b.total) * 100) : b.confidence,
+      count: b.total,
+      label: b.label,
+    }));
+  }, [userAttempts]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -137,7 +170,7 @@ export const AnalyticsScreen: React.FC = () => {
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={MASTERY_HISTORY_MOCK}>
+              <AreaChart data={masteryTrajectoryData}>
                 <defs>
                   <linearGradient id="masteryGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
@@ -197,7 +230,7 @@ export const AnalyticsScreen: React.FC = () => {
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={CALIBRATION_DATA}>
+              <LineChart data={calibrationCurveData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                 <XAxis dataKey="confidence" stroke="#71717a" fontSize={11} label={{ value: 'Reported Confidence %', position: 'insideBottom', offset: -2, fill: '#71717a', fontSize: 10 }} />
                 <YAxis stroke="#71717a" fontSize={11} domain={[0, 100]} label={{ value: 'Actual Correctness %', angle: -90, position: 'insideLeft', fill: '#71717a', fontSize: 10 }} />

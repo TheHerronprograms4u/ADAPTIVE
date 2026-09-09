@@ -8,6 +8,7 @@ import { FocusModeOverlay } from './components/layout/FocusModeOverlay';
 
 import { SplashScreen } from './components/screens/SplashScreen';
 import { WelcomeScreen } from './components/screens/WelcomeScreen';
+import { AuthScreen } from './components/screens/AuthScreen';
 import { OnboardingScreen } from './components/screens/OnboardingScreen';
 import { DiagnosticScreen } from './components/screens/DiagnosticScreen';
 import { DashboardScreen } from './components/screens/DashboardScreen';
@@ -33,6 +34,8 @@ const MainAppContent: React.FC = () => {
         return <SplashScreen />;
       case 'welcome':
         return <WelcomeScreen />;
+      case 'auth':
+        return <AuthScreen />;
       case 'onboarding':
         return <OnboardingScreen />;
       case 'diagnostic':
@@ -70,12 +73,18 @@ const MainAppContent: React.FC = () => {
     }
   };
 
-  const isFullscreenScreen = currentScreen === 'splash' || currentScreen === 'welcome' || currentScreen === 'onboarding';
+  const isFullscreenScreen =
+    currentScreen === 'splash' ||
+    currentScreen === 'welcome' ||
+    currentScreen === 'auth' ||
+    currentScreen === 'onboarding';
 
   if (isFullscreenScreen) {
     return (
-      <main className="min-h-screen bg-zinc-950 p-4 sm:p-8">
-        {renderActiveScreen()}
+      <main className="min-h-screen bg-zinc-950 p-4 sm:p-8 flex flex-col justify-center items-center">
+        <div className="w-full max-w-4xl">
+          {renderActiveScreen()}
+        </div>
       </main>
     );
   }

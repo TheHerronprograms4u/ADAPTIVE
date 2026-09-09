@@ -11,6 +11,10 @@ import {
   AlertCircle,
   X,
   Volume2,
+  User,
+  LogOut,
+  UserPlus,
+  Settings,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -26,6 +30,7 @@ export const Header: React.FC = () => {
   } = useAdaptive();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -87,7 +92,10 @@ export const Header: React.FC = () => {
         {/* Notification Bell with Dropdown */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              setShowUserMenu(false);
+            }}
             className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900/70 text-zinc-400 hover:text-white transition-all cursor-pointer"
           >
             <Bell className="h-4 w-4" />
@@ -142,6 +150,63 @@ export const Header: React.FC = () => {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Account Avatar & Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setShowUserMenu(!showUserMenu);
+              setShowNotifications(false);
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-xs font-bold text-white shadow-md hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer"
+          >
+            {profile.name.slice(0, 2).toUpperCase()}
+          </button>
+
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-white/10 bg-zinc-900/95 p-2 shadow-2xl backdrop-blur-2xl z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+              <div className="px-3 py-2 border-b border-white/5">
+                <p className="font-semibold text-white truncate">{profile.name}</p>
+                <p className="text-[10px] text-zinc-400 truncate">{profile.email || 'harron@adaptive.edu'}</p>
+              </div>
+
+              <div className="py-1 space-y-0.5">
+                <button
+                  onClick={() => {
+                    navigateTo('profile');
+                    setShowUserMenu(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                >
+                  <User className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>Epistemic Profile</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigateTo('settings');
+                    setShowUserMenu(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                >
+                  <Settings className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Settings & Preferences</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigateTo('auth');
+                    setShowUserMenu(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                >
+                  <UserPlus className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Create / Switch Account</span>
+                </button>
               </div>
             </div>
           )}

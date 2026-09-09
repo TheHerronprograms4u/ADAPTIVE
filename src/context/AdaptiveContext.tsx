@@ -18,6 +18,7 @@ import { soundEffects } from '../lib/audioEffects';
 export type ScreenName = 
   | 'splash'
   | 'welcome'
+  | 'auth'
   | 'onboarding'
   | 'diagnostic'
   | 'dashboard'

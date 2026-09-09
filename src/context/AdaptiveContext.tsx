@@ -14,6 +14,7 @@ import { classifyUserError } from '../lib/misconceptionClassifier';
 import { computeNextBestLearningAction } from '../lib/recommendationEngine';
 import { generatePersonalizedSession } from '../lib/sessionGenerator';
 import { soundEffects } from '../lib/audioEffects';
+import { supabase, syncProfileToSupabase, fetchProfileFromSupabase, syncConceptStatesToSupabase, saveAttemptToSupabase, saveDocumentToSupabase } from '../lib/supabase';
 
 export type ScreenName = 
   | 'splash'
@@ -226,14 +227,64 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   ]);
 
-  // Sync to localStorage
+  // Listen for Supabase Auth State and Initial Session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfileFromSupabase(session.user.id).then(cloudProfile => {
+          if (cloudProfile) {
+            setProfile(cloudProfile);
+          } else {
+            setProfile(prev => {
+              const updated = {
+                ...prev,
+                id: session.user.id,
+                email: session.user.email || prev.email,
+                name: session.user.user_metadata?.name || prev.name,
+              };
+              syncProfileToSupabase(updated);
+              return updated;
+            });
+          }
+        });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const cloudProfile = await fetchProfileFromSupabase(session.user.id);
+        if (cloudProfile) {
+          setProfile(cloudProfile);
+        } else {
+          setProfile(prev => {
+            const updated = {
+              ...prev,
+              id: session.user.id,
+              email: session.user.email || prev.email,
+              name: session.user.user_metadata?.name || prev.name,
+            };
+            syncProfileToSupabase(updated);
+            return updated;
+          });
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Sync to localStorage & Supabase
   useEffect(() => {
     localStorage.setItem('adaptive_profile', JSON.stringify(profile));
+    syncProfileToSupabase(profile);
   }, [profile]);
 
   useEffect(() => {
     localStorage.setItem('adaptive_concept_states', JSON.stringify(userConceptStates));
-  }, [userConceptStates]);
+    syncConceptStatesToSupabase(profile.id, userConceptStates);
+  }, [userConceptStates, profile.id]);
 
   const activeSubject = subjects.find(s => s.id === activeSubjectId) || subjects[0];
   const selectedConcept = concepts.find(c => c.id === selectedConceptId) || null;
@@ -339,6 +390,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     setUserAttempts(prev => [fullAttempt, ...prev]);
+    saveAttemptToSupabase(fullAttempt);
 
     // Check if concept just crossed into mastery
     const oldTier = existingState.masteryTier;
@@ -555,6 +607,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addUploadedDocument = (doc: UploadedDocument) => {
     setUploadedDocuments(prev => [doc, ...prev]);
+    saveDocumentToSupabase(doc);
     // Merge extracted concepts into active concepts
     setConcepts(prev => [...prev, ...doc.extractedConcepts]);
     if (doc.generatedQuestions.length > 0) {

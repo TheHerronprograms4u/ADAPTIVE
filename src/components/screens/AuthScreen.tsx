@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import {
   Zap,
   Sparkles,
@@ -7,10 +8,9 @@ import {
   Lock,
   Mail,
   User,
-  CheckCircle2,
-  Shield,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
@@ -19,29 +19,115 @@ export const AuthScreen: React.FC = () => {
   const [mode, setMode] = useState<'signup' | 'signin'>('signup');
   const [name, setName] = useState<string>(profile.name || 'Harron');
   const [email, setEmail] = useState<string>(profile.email || 'harron@adaptive.edu');
-  const [password, setPassword] = useState<string>('••••••••');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
 
-    setTimeout(() => {
-      updateProfile({
-        name: name.trim() || 'Learner',
-        email: email.trim(),
-      });
-      setIsLoading(false);
+    try {
+      if (isSupabaseConfigured && password) {
+        if (mode === 'signup') {
+          const { data, error } = await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: {
+              data: {
+                name: name.trim() || 'Learner',
+              },
+            },
+          });
 
-      if (mode === 'signup') {
-        // Go to personalized onboarding questionnaire
-        navigateTo('onboarding');
+          if (error) {
+            setErrorMessage(error.message);
+            setIsLoading(false);
+            return;
+          }
+
+          if (data.user) {
+            updateProfile({
+              id: data.user.id,
+              name: name.trim() || 'Learner',
+              email: email.trim(),
+            });
+          }
+
+          if (data.session) {
+            navigateTo('onboarding');
+          } else {
+            setSuccessMessage('Account created! If email confirmation is enabled, please check your inbox.');
+            setTimeout(() => navigateTo('onboarding'), 1500);
+          }
+        } else {
+          // Sign In
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+
+          if (error) {
+            setErrorMessage(error.message);
+            setIsLoading(false);
+            return;
+          }
+
+          if (data.user) {
+            updateProfile({
+              id: data.user.id,
+              name: data.user.user_metadata?.name || name.trim() || 'Learner',
+              email: email.trim(),
+            });
+          }
+
+          navigateTo('dashboard');
+        }
       } else {
-        // Go to dashboard directly
-        navigateTo('dashboard');
+        // Fallback local update
+        updateProfile({
+          name: name.trim() || 'Learner',
+          email: email.trim(),
+        });
+        if (mode === 'signup') {
+          navigateTo('onboarding');
+        } else {
+          navigateTo('dashboard');
+        }
       }
-    }, 600);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    if (!isSupabaseConfigured) {
+      navigateTo('onboarding');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+      if (error) {
+        setErrorMessage(error.message);
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'OAuth sign in failed.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGuestContinue = () => {
@@ -60,7 +146,7 @@ export const AuthScreen: React.FC = () => {
         </h1>
         <p className="mt-1.5 text-xs text-zinc-400">
           {mode === 'signup'
-            ? 'Initialize your personal AI learning operating system.'
+            ? 'Initialize your personal AI learning operating system with cloud sync.'
             : 'Access your continuous knowledge galaxy and memory models.'}
         </p>
       </div>
@@ -71,7 +157,7 @@ export const AuthScreen: React.FC = () => {
         <div className="grid grid-cols-2 rounded-xl bg-zinc-950/60 p-1 border border-white/5 text-xs font-semibold">
           <button
             type="button"
-            onClick={() => setMode('signup')}
+            onClick={() => { setMode('signup'); setErrorMessage(null); }}
             className={`rounded-lg py-2 transition-all cursor-pointer ${
               mode === 'signup'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -82,7 +168,7 @@ export const AuthScreen: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setMode('signin')}
+            onClick={() => { setMode('signin'); setErrorMessage(null); }}
             className={`rounded-lg py-2 transition-all cursor-pointer ${
               mode === 'signin'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -93,11 +179,24 @@ export const AuthScreen: React.FC = () => {
           </button>
         </div>
 
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         {/* Social Authentication Buttons */}
         <div className="space-y-2">
           <button
             type="button"
-            onClick={handleGuestContinue}
+            onClick={() => handleOAuthLogin('google')}
             className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-zinc-950/60 px-4 py-2.5 text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-all cursor-pointer"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -123,7 +222,7 @@ export const AuthScreen: React.FC = () => {
 
           <button
             type="button"
-            onClick={handleGuestContinue}
+            onClick={() => handleOAuthLogin('github')}
             className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-zinc-950/60 px-4 py-2.5 text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-all cursor-pointer"
           >
             <svg className="h-4 w-4 fill-current text-zinc-200" viewBox="0 0 24 24">
@@ -189,6 +288,7 @@ export const AuthScreen: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                minLength={6}
                 className="glass-input w-full rounded-xl pl-10 pr-10 py-2.5 text-xs text-white"
               />
               <button
@@ -204,7 +304,7 @@ export const AuthScreen: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-indigo-700 transition-all cursor-pointer"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-indigo-700 transition-all cursor-pointer disabled:opacity-50"
           >
             {isLoading ? (
               <Sparkles className="h-4 w-4 animate-spin" />

@@ -114,6 +114,7 @@ export const AuthScreen: React.FC = () => {
 
     try {
       setIsLoading(true);
+      setErrorMessage(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -121,7 +122,11 @@ export const AuthScreen: React.FC = () => {
         },
       });
       if (error) {
-        setErrorMessage(error.message);
+        if (error.message.includes('not enabled') || error.message.includes('validation_failed')) {
+          setErrorMessage(`${provider === 'google' ? 'Google' : 'GitHub'} login is not enabled in your Supabase project yet. You can sign up with Email & Password below or explore in Guest mode.`);
+        } else {
+          setErrorMessage(error.message);
+        }
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'OAuth sign in failed.');

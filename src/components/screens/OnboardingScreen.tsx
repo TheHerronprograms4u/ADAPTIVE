@@ -20,7 +20,7 @@ export const OnboardingScreen: React.FC = () => {
   const { profile, updateProfile, subjects, navigateTo, startDiagnostic } = useAdaptive();
 
   const [step, setStep] = useState<number>(1);
-  const [name, setName] = useState<string>(profile.name || 'Harron');
+  const [name, setName] = useState<string>(profile.name !== 'Learner' ? profile.name : '');
   const [educationLevel, setEducationLevel] = useState<EducationLevel>(profile.educationLevel || 'undergraduate');
   const [targetGoal, setTargetGoal] = useState<GoalType>(profile.targetGoal || 'master_subject');
   const [sessionMinutes, setSessionMinutes] = useState<number>(profile.preferredSessionMinutes || 25);

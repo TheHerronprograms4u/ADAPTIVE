@@ -17,8 +17,8 @@ export const AuthScreen: React.FC = () => {
   const { updateProfile, navigateTo, profile } = useAdaptive();
 
   const [mode, setMode] = useState<'signup' | 'signin'>('signup');
-  const [name, setName] = useState<string>(profile.name || 'Harron');
-  const [email, setEmail] = useState<string>(profile.email || 'harron@adaptive.edu');
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);

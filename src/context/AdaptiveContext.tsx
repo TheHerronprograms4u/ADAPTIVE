@@ -110,68 +110,63 @@ interface AdaptiveContextType {
 }
 
 const INITIAL_PROFILE: LearnerProfile = {
-  id: 'learner-1',
-  name: 'Harron',
-  avatarSeed: 'harron',
+  id: 'learner-' + Date.now(),
+  name: 'Learner',
+  avatarSeed: 'learner',
   educationLevel: 'undergraduate',
   primarySubjectId: 'subj-math',
   targetGoal: 'master_subject',
   preferredSessionMinutes: 25,
   pacePreference: 'balanced',
   modalities: {
-    visual: 0.85,
-    reading: 0.70,
-    practice: 0.90,
-    interactive: 0.80,
+    visual: 0.8,
+    reading: 0.7,
+    practice: 0.9,
+    interactive: 0.8,
     socratic: 0.75,
-    directExplanation: 0.80,
+    directExplanation: 0.8,
     analogies: 0.85,
   },
-  overallMastery: 0.74,
-  overallRetention: 0.91,
-  learningMomentum: 86,
-  calibrationScore: 87,
-  currentStreakDays: 6,
-  totalStudyMinutes: 320,
-  conceptsMasteredCount: 5,
-  totalAttemptsCount: 74,
-  accuracyRate: 0.82,
-  averageResponseTimeSeconds: 11.2,
+  overallMastery: 0.0,
+  overallRetention: 1.0,
+  learningMomentum: 0,
+  calibrationScore: 0,
+  currentStreakDays: 1,
+  totalStudyMinutes: 0,
+  conceptsMasteredCount: 0,
+  totalAttemptsCount: 0,
+  accuracyRate: 0.0,
+  averageResponseTimeSeconds: 0,
   personaType: 'analytical',
-  createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+  createdAt: new Date().toISOString(),
   lastActiveAt: new Date().toISOString(),
 };
 
 function generateInitialStates(): Record<string, UserConceptState> {
   const map: Record<string, UserConceptState> = {};
-  DEFAULT_CONCEPTS.forEach((c, idx) => {
-    // Scaffold realistic progressive states
-    const mastery = idx === 0 ? 0.94 : idx === 1 ? 0.86 : idx === 2 ? 0.68 : idx === 3 ? 0.52 : 0.25;
-    const stability = idx === 0 ? 28 : idx === 1 ? 16 : idx === 2 ? 6.5 : idx === 3 ? 3.0 : 1.2;
+  DEFAULT_CONCEPTS.forEach((c) => {
     map[c.id] = {
-      userId: 'learner-1',
+      userId: 'learner',
       conceptId: c.id,
-      masteryScore: mastery,
-      confidenceScore: mastery * 0.9 + 0.1,
-      retentionScore: idx === 2 ? 0.58 : 0.88, // Make Factoring decaying to trigger review priority!
-      masteryTier: determineMasteryTier(mastery),
-      stabilityDays: stability,
+      masteryScore: 0.0,
+      confidenceScore: 0.5,
+      retentionScore: 1.0,
+      masteryTier: 'novice',
+      stabilityDays: 1.0,
       difficultyRating: c.difficultyBase,
-      repsCount: idx < 3 ? 6 : 2,
-      lapsesCount: idx === 2 ? 2 : 0,
-      lastReviewedAt: new Date(Date.now() - (idx === 2 ? 4.5 : 1) * 86400000).toISOString(),
+      repsCount: 0,
+      lapsesCount: 0,
+      lastReviewedAt: new Date().toISOString(),
       nextReviewAt: new Date().toISOString(),
-      forgettingProbability: idx === 2 ? 0.42 : 0.12,
-      totalAttempts: idx < 3 ? 14 : 3,
-      correctAttempts: idx < 3 ? 12 : 2,
-      accuracyRate: idx < 3 ? 0.85 : 0.66,
-      averageResponseTimeSeconds: 10 + idx * 2,
-      last5Accuracy: [true, true, true, false, true],
-      misconceptionHistory: idx === 2 ? [
-        { misconceptionId: 'misc-quad-sq-root', detectedAt: new Date(Date.now() - 86400000).toISOString(), resolved: false }
-      ] : [],
-      isPrerequisiteBottleneck: idx === 2,
-      recommendedNextAction: idx === 2 ? 'review' : 'practice',
+      forgettingProbability: 0.0,
+      totalAttempts: 0,
+      correctAttempts: 0,
+      accuracyRate: 0.0,
+      averageResponseTimeSeconds: 0,
+      last5Accuracy: [],
+      misconceptionHistory: [],
+      isPrerequisiteBottleneck: false,
+      recommendedNextAction: 'learn',
     };
   });
   return map;
@@ -183,7 +178,19 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('dashboard');
   const [profile, setProfile] = useState<LearnerProfile>(() => {
     const saved = localStorage.getItem('adaptive_profile');
-    return saved ? JSON.parse(saved) : INITIAL_PROFILE;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.id === 'learner-1' || parsed.name === 'Harron') {
+          localStorage.removeItem('adaptive_profile');
+          return INITIAL_PROFILE;
+        }
+        return parsed;
+      } catch {
+        return INITIAL_PROFILE;
+      }
+    }
+    return INITIAL_PROFILE;
   });
 
   const [subjects] = useState<Subject[]>(DEFAULT_SUBJECTS);
@@ -193,7 +200,19 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>('math-alg-quad');
   const [userConceptStates, setUserConceptStates] = useState<Record<string, UserConceptState>>(() => {
     const saved = localStorage.getItem('adaptive_concept_states');
-    return saved ? JSON.parse(saved) : generateInitialStates();
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed['math-alg-quad']?.masteryScore === 0.68) {
+          localStorage.removeItem('adaptive_concept_states');
+          return generateInitialStates();
+        }
+        return parsed;
+      } catch {
+        return generateInitialStates();
+      }
+    }
+    return generateInitialStates();
   });
   const [userAttempts, setUserAttempts] = useState<UserAttempt[]>([]);
   const [currentSession, setCurrentSession] = useState<DynamicLearningSession | null>(null);
@@ -204,28 +223,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isFocusModeActive, setIsFocusModeActive] = useState(false);
 
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: 'notif-1',
-      title: 'Retention Alert: Quadratic Functions',
-      body: 'Your retention for Quadratic Functions has decayed to 58%. A 3-minute review is recommended today.',
-      type: 'retention',
-      timestamp: '10 mins ago',
-      isRead: false,
-      actionScreen: 'review_center',
-      actionConceptId: 'math-alg-quad',
-    },
-    {
-      id: 'notif-2',
-      title: 'Prerequisite Gate Satisfied',
-      body: 'You have mastered all prerequisites for Derivatives & Rates of Change. Ready for the next challenge?',
-      type: 'mastery',
-      timestamp: '2 hours ago',
-      isRead: false,
-      actionScreen: 'lesson',
-      actionConceptId: 'math-calc-deriv',
-    }
-  ]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   // Listen for Supabase Auth State and Initial Session
   useEffect(() => {
@@ -616,12 +614,18 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const resetAllData = () => {
-    localStorage.clear();
-    setProfile(INITIAL_PROFILE);
-    setUserConceptStates(generateInitialStates());
+    localStorage.removeItem('adaptive_profile');
+    localStorage.removeItem('adaptive_concept_states');
+    const freshProfile = { ...INITIAL_PROFILE, id: profile.id, email: profile.email, name: profile.name };
+    const freshStates = generateInitialStates();
+    setProfile(freshProfile);
+    setUserConceptStates(freshStates);
     setUserAttempts([]);
     setCurrentSession(null);
     setDiagnosticState(null);
+    setNotifications([]);
+    syncProfileToSupabase(freshProfile);
+    syncConceptStatesToSupabase(profile.id, freshStates);
     navigateTo('dashboard');
   };
 

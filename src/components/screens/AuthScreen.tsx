@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
-  const { updateProfile, navigateTo, profile } = useAdaptive();
+  const { updateProfile, navigateTo, setIsAuthenticated } = useAdaptive();
 
-  const [mode, setMode] = useState<'signup' | 'signin'>('signup');
+  const [mode, setMode] = useState<'signup' | 'signin'>('signin');
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -51,6 +51,7 @@ export const AuthScreen: React.FC = () => {
           }
 
           if (data.user) {
+            setIsAuthenticated(true);
             updateProfile({
               id: data.user.id,
               name: name.trim() || 'Learner',
@@ -59,10 +60,14 @@ export const AuthScreen: React.FC = () => {
           }
 
           if (data.session) {
+            setIsAuthenticated(true);
             navigateTo('onboarding');
           } else {
             setSuccessMessage('Account created! If email confirmation is enabled, please check your inbox.');
-            setTimeout(() => navigateTo('onboarding'), 1500);
+            setTimeout(() => {
+              setIsAuthenticated(true);
+              navigateTo('onboarding');
+            }, 1500);
           }
         } else {
           // Sign In
@@ -78,6 +83,7 @@ export const AuthScreen: React.FC = () => {
           }
 
           if (data.user) {
+            setIsAuthenticated(true);
             updateProfile({
               id: data.user.id,
               name: data.user.user_metadata?.name || name.trim() || 'Learner',
@@ -85,10 +91,12 @@ export const AuthScreen: React.FC = () => {
             });
           }
 
+          setIsAuthenticated(true);
           navigateTo('dashboard');
         }
       } else {
         // Fallback local update
+        setIsAuthenticated(true);
         updateProfile({
           name: name.trim() || 'Learner',
           email: email.trim(),
@@ -108,6 +116,7 @@ export const AuthScreen: React.FC = () => {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     if (!isSupabaseConfigured) {
+      setIsAuthenticated(true);
       navigateTo('onboarding');
       return;
     }
@@ -136,7 +145,13 @@ export const AuthScreen: React.FC = () => {
   };
 
   const handleGuestContinue = () => {
-    navigateTo('onboarding');
+    setIsAuthenticated(true);
+    updateProfile({
+      id: 'guest-' + Date.now(),
+      name: 'Guest Learner',
+      email: 'guest@adaptive.edu',
+    });
+    navigateTo('dashboard');
   };
 
   return (

@@ -27,6 +27,7 @@ export const Header: React.FC = () => {
     notifications,
     markNotificationAsRead,
     navigateTo,
+    signOut,
   } = useAdaptive();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -180,7 +181,7 @@ export const Header: React.FC = () => {
                     navigateTo('profile');
                     setShowUserMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 >
                   <User className="h-3.5 w-3.5 text-indigo-400" />
                   <span>Epistemic Profile</span>
@@ -191,21 +192,23 @@ export const Header: React.FC = () => {
                     navigateTo('settings');
                     setShowUserMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 >
                   <Settings className="h-3.5 w-3.5 text-zinc-400" />
                   <span>Settings & Preferences</span>
                 </button>
 
+                <div className="my-1 border-t border-white/5" />
+
                 <button
-                  onClick={() => {
-                    navigateTo('auth');
+                  onClick={async () => {
                     setShowUserMenu(false);
+                    await signOut();
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer"
                 >
-                  <UserPlus className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Create / Switch Account</span>
+                  <LogOut className="h-3.5 w-3.5 text-rose-400" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>

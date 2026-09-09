@@ -104,6 +104,12 @@ interface AdaptiveContextType {
   activeExamPlan: ExamPreparationPlan | null;
   setActiveExamPlan: (plan: ExamPreparationPlan | null) => void;
   
+  // Authentication & Session
+  isAuthenticated: boolean;
+  setIsAuthenticated: (val: boolean) => void;
+  isAuthChecking: boolean;
+  signOut: () => Promise<void>;
+
   // Milestones
   milestones: CognitiveMilestone[];
   resetAllData: () => void;
@@ -175,7 +181,9 @@ function generateInitialStates(): Record<string, UserConceptState> {
 const AdaptiveContext = createContext<AdaptiveContextType | null>(null);
 
 export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenName>('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>('auth');
   const [profile, setProfile] = useState<LearnerProfile>(() => {
     const saved = localStorage.getItem('adaptive_profile');
     if (saved) {
@@ -227,9 +235,18 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Listen for Supabase Auth State and Initial Session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfileFromSupabase(session.user.id).then(cloudProfile => {
+    let isMounted = true;
+
+    async function initializeAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        if (session?.user) {
+          setIsAuthenticated(true);
+          const cloudProfile = await fetchProfileFromSupabase(session.user.id);
+          if (!isMounted) return;
+
           if (cloudProfile) {
             setProfile(cloudProfile);
           } else {
@@ -238,51 +255,84 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 ...prev,
                 id: session.user.id,
                 email: session.user.email || prev.email,
-                name: session.user.user_metadata?.name || prev.name,
+                name: session.user.user_metadata?.name || prev.name || 'Learner',
               };
               syncProfileToSupabase(updated);
               return updated;
             });
           }
-        });
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const cloudProfile = await fetchProfileFromSupabase(session.user.id);
-        if (cloudProfile) {
-          setProfile(cloudProfile);
+          setCurrentScreen('dashboard');
         } else {
-          setProfile(prev => {
-            const updated = {
-              ...prev,
-              id: session.user.id,
-              email: session.user.email || prev.email,
-              name: session.user.user_metadata?.name || prev.name,
-            };
-            syncProfileToSupabase(updated);
-            return updated;
-          });
+          setIsAuthenticated(false);
+          setCurrentScreen('auth');
         }
+      } catch (err) {
+        console.warn('Supabase auth session check note:', err);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setCurrentScreen('auth');
+        }
+      } finally {
+        if (isMounted) {
+          setIsAuthChecking(false);
+        }
+      }
+    }
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+
+      if (event === 'SIGNED_IN' || (session?.user && !isAuthenticated)) {
+        setIsAuthenticated(true);
+        if (session?.user) {
+          const cloudProfile = await fetchProfileFromSupabase(session.user.id);
+          if (!isMounted) return;
+
+          if (cloudProfile) {
+            setProfile(cloudProfile);
+          } else {
+            setProfile(prev => {
+              const updated = {
+                ...prev,
+                id: session.user.id,
+                email: session.user.email || prev.email,
+                name: session.user.user_metadata?.name || prev.name || 'Learner',
+              };
+              syncProfileToSupabase(updated);
+              return updated;
+            });
+          }
+        }
+        setCurrentScreen(prev => (prev === 'auth' || prev === 'welcome' || prev === 'splash' ? 'dashboard' : prev));
+      } else if (event === 'SIGNED_OUT' || !session?.user) {
+        setIsAuthenticated(false);
+        setProfile(INITIAL_PROFILE);
+        setCurrentScreen('auth');
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  // Sync to localStorage & Supabase
+  // Sync to localStorage & Supabase only when authenticated
   useEffect(() => {
-    localStorage.setItem('adaptive_profile', JSON.stringify(profile));
-    syncProfileToSupabase(profile);
-  }, [profile]);
+    if (isAuthenticated) {
+      localStorage.setItem('adaptive_profile', JSON.stringify(profile));
+      syncProfileToSupabase(profile);
+    }
+  }, [profile, isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem('adaptive_concept_states', JSON.stringify(userConceptStates));
-    syncConceptStatesToSupabase(profile.id, userConceptStates);
-  }, [userConceptStates, profile.id]);
+    if (isAuthenticated && profile.id) {
+      localStorage.setItem('adaptive_concept_states', JSON.stringify(userConceptStates));
+      syncConceptStatesToSupabase(profile.id, userConceptStates);
+    }
+  }, [userConceptStates, profile.id, isAuthenticated]);
 
   const activeSubject = subjects.find(s => s.id === activeSubjectId) || subjects[0];
   const selectedConcept = concepts.find(c => c.id === selectedConceptId) || null;
@@ -613,6 +663,26 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Supabase signOut note:', err);
+    }
+    setIsAuthenticated(false);
+    localStorage.removeItem('adaptive_profile');
+    localStorage.removeItem('adaptive_concept_states');
+    const freshProfile = { ...INITIAL_PROFILE, id: 'learner-' + Date.now() };
+    const freshStates = generateInitialStates();
+    setProfile(freshProfile);
+    setUserConceptStates(freshStates);
+    setUserAttempts([]);
+    setCurrentSession(null);
+    setDiagnosticState(null);
+    setNotifications([]);
+    setCurrentScreen('auth');
+  };
+
   const resetAllData = () => {
     localStorage.removeItem('adaptive_profile');
     localStorage.removeItem('adaptive_concept_states');
@@ -624,8 +694,10 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentSession(null);
     setDiagnosticState(null);
     setNotifications([]);
-    syncProfileToSupabase(freshProfile);
-    syncConceptStatesToSupabase(profile.id, freshStates);
+    if (isAuthenticated) {
+      syncProfileToSupabase(freshProfile);
+      syncConceptStatesToSupabase(profile.id, freshStates);
+    }
     navigateTo('dashboard');
   };
 
@@ -667,6 +739,10 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addUploadedDocument,
         activeExamPlan,
         setActiveExamPlan,
+        isAuthenticated,
+        setIsAuthenticated,
+        isAuthChecking,
+        signOut,
         milestones,
         resetAllData,
       }}

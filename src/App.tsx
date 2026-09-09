@@ -25,8 +25,36 @@ import { AchievementsScreen } from './components/screens/AchievementsScreen';
 import { ProfileScreen } from './components/screens/ProfileScreen';
 import { SettingsScreen } from './components/screens/SettingsScreen';
 
+import { Zap, Sparkles } from 'lucide-react';
+
 const MainAppContent: React.FC = () => {
-  const { currentScreen } = useAdaptive();
+  const { currentScreen, isAuthenticated, isAuthChecking } = useAdaptive();
+
+  if (isAuthChecking) {
+    return (
+      <main className="min-h-screen bg-zinc-950 p-4 sm:p-8 flex flex-col justify-center items-center text-white select-none">
+        <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 shadow-xl shadow-indigo-500/30 animate-pulse-glow">
+          <Zap className="h-8 w-8 fill-current text-white" />
+        </div>
+        <h2 className="font-mono text-xl font-bold tracking-wider text-white">ADAPTIVE OS</h2>
+        <div className="mt-4 flex items-center gap-2 text-xs font-mono text-indigo-400">
+          <Sparkles className="h-3.5 w-3.5 animate-spin" />
+          <span>Verifying session security...</span>
+        </div>
+      </main>
+    );
+  }
+
+  // If user is not logged in, enforce login first before accessing platform features
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-zinc-950 p-4 sm:p-8 flex flex-col justify-center items-center">
+        <div className="w-full max-w-4xl">
+          {currentScreen === 'welcome' ? <WelcomeScreen /> : <AuthScreen />}
+        </div>
+      </main>
+    );
+  }
 
   const renderActiveScreen = () => {
     switch (currentScreen) {

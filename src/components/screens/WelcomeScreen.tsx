@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export const WelcomeScreen: React.FC = () => {
-  const { navigateTo } = useAdaptive();
+  const { navigateTo, setIsAuthenticated } = useAdaptive();
 
   return (
     <div className="mx-auto max-w-4xl space-y-12 py-8 pb-16 animate-in fade-in duration-300">
@@ -36,16 +36,19 @@ export const WelcomeScreen: React.FC = () => {
             onClick={() => navigateTo('auth')}
             className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-8 py-4 text-sm font-semibold text-white shadow-xl shadow-indigo-500/30 hover:from-indigo-600 hover:to-indigo-700 transition-all cursor-pointer"
           >
-            <UserPlus className="h-4 w-4" />
-            <span>Create Account / Get Started</span>
+            <LogIn className="h-4 w-4" />
+            <span>Sign In / Create Account</span>
             <ArrowRight className="h-4 w-4" />
           </button>
 
           <button
-            onClick={() => navigateTo('dashboard')}
+            onClick={() => {
+              setIsAuthenticated(true);
+              navigateTo('dashboard');
+            }}
             className="rounded-2xl border border-white/10 bg-zinc-900/80 px-6 py-4 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-all cursor-pointer"
           >
-            Explore Demo / Dashboard
+            Explore Guest Demo
           </button>
         </div>
       </div>

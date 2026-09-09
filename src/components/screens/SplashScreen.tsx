@@ -3,14 +3,14 @@ import { useAdaptive } from '../../context/AdaptiveContext';
 import { Zap, Sparkles } from 'lucide-react';
 
 export const SplashScreen: React.FC = () => {
-  const { navigateTo } = useAdaptive();
+  const { navigateTo, isAuthenticated } = useAdaptive();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigateTo('dashboard');
+      navigateTo(isAuthenticated ? 'dashboard' : 'auth');
     }, 1200);
     return () => clearTimeout(timer);
-  }, [navigateTo]);
+  }, [navigateTo, isAuthenticated]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 text-white animate-in fade-in duration-300">

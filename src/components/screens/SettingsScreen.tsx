@@ -11,10 +11,11 @@ import {
   Shield,
   Eye,
   Zap,
+  LogOut,
 } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
-  const { profile, resetAllData } = useAdaptive();
+  const { profile, resetAllData, signOut } = useAdaptive();
 
   const [groqKey, setGroqKey] = useState<string>(getGroqApiKey());
   const [groqModel, setGroqModel] = useState<string>(getGroqModel());
@@ -228,10 +229,18 @@ export const SettingsScreen: React.FC = () => {
 
           <button
             onClick={resetAllData}
-            className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/20 px-4 py-2.5 text-xs font-medium text-rose-300 hover:bg-rose-950/40 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-950/20 px-4 py-2.5 text-xs font-medium text-amber-300 hover:bg-amber-950/40 transition-all cursor-pointer"
           >
             <RotateCcw className="h-4 w-4" />
             <span>Reset Curriculum & Clear Local State</span>
+          </button>
+
+          <button
+            onClick={signOut}
+            className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/20 px-4 py-2.5 text-xs font-medium text-rose-300 hover:bg-rose-950/40 transition-all cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out of Account</span>
           </button>
         </div>
       </div>

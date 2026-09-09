@@ -68,7 +68,7 @@ export const WelcomeScreen: React.FC = () => {
           </div>
           <h3 className="text-base font-bold text-white">9-Mode Socratic AI Mentor</h3>
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Powered by Gemini 2.5 with live voice input, Socratic inquiry, deep mathematical proofs, analogies, and Teach-Me evaluations.
+            Powered by Groq LPU ultra-fast inference with live voice input, Socratic inquiry, deep mathematical proofs, analogies, and Teach-Me evaluations.
           </p>
         </div>
 

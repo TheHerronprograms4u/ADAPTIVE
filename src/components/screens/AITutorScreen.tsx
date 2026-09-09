@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { TutorMode, TutorMessage } from '../../types/tutor';
-import { askGeminiTutor } from '../../lib/gemini';
+import { askGroqTutor } from '../../lib/groq';
 import { speechService } from '../../lib/speech';
 import { MathText } from '../shared/MathText';
 import {
@@ -118,7 +118,7 @@ export const AITutorScreen: React.FC = () => {
     const misconceptions = currentConcept.misconceptions.map(m => m.name);
 
     try {
-      const replyText = await askGeminiTutor({
+      const replyText = await askGroqTutor({
         learnerName: profile.name,
         educationLevel: profile.educationLevel,
         conceptName: currentConcept.name,
@@ -128,7 +128,7 @@ export const AITutorScreen: React.FC = () => {
         mode: activeMode,
         userMessage: text,
         conversationHistory: messages.map(m => ({
-          role: m.sender === 'user' ? 'user' : 'model',
+          role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text,
         })),
       });

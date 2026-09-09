@@ -2,12 +2,13 @@
 
 <div align="center">
 
-**A premium, highly adaptive educational operating system powered by Bayesian Knowledge Tracing, FSRS Half-Life Spaced Repetition, continuous difficulty calibration, 9-category misconception detection, and multi-modal Socratic AI tutoring.**
+**A premium, highly adaptive educational operating system powered by Bayesian Knowledge Tracing, FSRS Half-Life Spaced Repetition, continuous difficulty calibration, 9-category misconception detection, Supabase cloud persistence, and multi-modal Socratic AI tutoring via Groq LPU.**
 
 [![React 19](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![Tailwind CSS v4](https://img.shields.io/badge/TailwindCSS-v4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-8b5cf6?style=flat-square&logo=google)](https://deepmind.google/technologies/gemini/)
+[![Groq LPU](https://img.shields.io/badge/Groq-LPU%20Inference-f97316?style=flat-square)](https://groq.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Database-3ecf8e?style=flat-square&logo=supabase)](https://supabase.com)
 [![Vite](https://img.shields.io/badge/Vite-8.2-646cff?style=flat-square&logo=vite)](https://vitejs.dev)
 
 </div>
@@ -37,7 +38,7 @@ Every learner has a continuously evolving **Learning Profile** estimating:
 - Interactive zoom, pan, tier filtering, and deep-dive drawer.
 
 ### 2. 🧠 9-Mode Socratic AI Tutor + Voice Learning
-Powered by **Google Gemini 2.5 Flash** with resilient deterministic pedagogical fallback:
+Powered by ultra-fast **Groq LPU (Llama 3.3 70B)** inference:
 - **Socratic Mode**: Guides with scaffolded deductive questions.
 - **Explain Mode**: Crystal-clear structured conceptual theory.
 - **Simplify (ELI5)**: Intuitive everyday language.
@@ -82,7 +83,7 @@ Classifies mistakes with actionable remedies:
 
 ### 7. 📄 Document & PDF Knowledge Extractor
 - Paste or upload syllabi, lecture notes, textbook excerpts, or study guides.
-- AI automatically extracts core concepts, prerequisite dependency hierarchies, and generates custom diagnostic tests.
+- AI automatically extracts core concepts, prerequisite dependency hierarchies, and generates custom diagnostic tests via Groq.
 
 ### 8. 🧪 Simulated Learner Evaluator Sandbox
 - Switch seamlessly between **Fast Learner** (94% Acc), **Struggling Learner** (Prerequisite gaps), **Overconfident Learner** (Misalignment), and **Underconfident Learner** to test adaptive algorithms in real time.
@@ -99,7 +100,8 @@ Classifies mistakes with actionable remedies:
 - **Styling & Design System**: Tailwind CSS v4 + Custom Glassmorphic tokens
 - **Typography & Math**: Plus Jakarta Sans, Inter, JetBrains Mono, KaTeX for LaTeX rendering
 - **Data Visualizations**: Recharts + HTML5 Canvas
-- **AI & LLM**: Google Gemini (`@google/genai` API)
+- **AI & LLM**: Groq LPU Inference (`llama-3.3-70b-versatile`, `deepseek-r1-distill-llama-70b`)
+- **Backend & Database**: Supabase (Auth, Postgres, Real-time sync)
 - **Audio & Voice**: Web Speech Recognition, SpeechSynthesis, and Web Audio API synthesizer
 - **Motion & Polish**: Framer Motion + Canvas Confetti
 
@@ -122,8 +124,10 @@ cd ADAPTIVE
 npm install
 
 # Configure environment variables
-# Copy .env.example to .env.local and add your Gemini API Key
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
+# Copy .env.example to .env.local and add your Groq & Supabase keys:
+VITE_GROQ_API_KEY=your_groq_api_key_here
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Start the development server
 npm run dev

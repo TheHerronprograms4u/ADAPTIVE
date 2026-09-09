@@ -4,17 +4,13 @@ import { soundEffects } from '../../lib/audioEffects';
 import { getGroqApiKey, getGroqModel } from '../../lib/groq';
 import {
   Settings as SettingsIcon,
-  Key,
   Volume2,
-  Sliders,
   Download,
   RotateCcw,
-  Sparkles,
   CheckCircle2,
   Shield,
   Eye,
   Zap,
-  Cpu,
 } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
@@ -23,11 +19,6 @@ export const SettingsScreen: React.FC = () => {
   const [groqKey, setGroqKey] = useState<string>(getGroqApiKey());
   const [groqModel, setGroqModel] = useState<string>(getGroqModel());
   const [groqKeySaved, setGroqKeySaved] = useState<boolean>(false);
-
-  const [geminiKey, setGeminiKey] = useState<string>(
-    localStorage.getItem('gemini_api_key') || 'AIzaSyAzGLvelFxhmrnJo36-KdmlIvZQiZoJ3-s'
-  );
-  const [geminiKeySaved, setGeminiKeySaved] = useState<boolean>(false);
 
   const [soundEnabled, setSoundEnabled] = useState<boolean>(soundEffects.soundEnabled);
   const [highContrast, setHighContrast] = useState<boolean>(false);
@@ -39,13 +30,6 @@ export const SettingsScreen: React.FC = () => {
     localStorage.setItem('groq_model', groqModel);
     setGroqKeySaved(true);
     setTimeout(() => setGroqKeySaved(false), 2000);
-  };
-
-  const handleSaveGeminiKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('gemini_api_key', geminiKey.trim());
-    setGeminiKeySaved(true);
-    setTimeout(() => setGeminiKeySaved(false), 2000);
   };
 
   const handleToggleSound = () => {
@@ -83,7 +67,7 @@ export const SettingsScreen: React.FC = () => {
         </p>
       </div>
 
-      {/* Groq LPU Engine Config (Primary) */}
+      {/* Groq LPU Engine Config */}
       <div className="rounded-3xl border border-indigo-500/30 bg-indigo-950/20 p-6 backdrop-blur-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -94,16 +78,16 @@ export const SettingsScreen: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-white">Groq LPU AI Engine</h3>
                 <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-indigo-300 border border-indigo-500/30">
-                  Primary
+                  Active
                 </span>
               </div>
               <span className="text-[11px] text-zinc-400">
-                Ultra-fast 500+ tokens/sec inference powering the AI Tutor and Document Extraction
+                Ultra-fast 500+ tokens/sec inference powering the Socratic AI Tutor and Document Extraction
               </span>
             </div>
           </div>
           <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3" /> Active
+            <CheckCircle2 className="h-3 w-3" /> Connected
           </span>
         </div>
 
@@ -161,40 +145,6 @@ export const SettingsScreen: React.FC = () => {
               {groqKeySaved ? 'Saved Preferences!' : 'Save Groq Settings'}
             </button>
           </div>
-        </form>
-      </div>
-
-      {/* Google Gemini Backup Config */}
-      <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6 backdrop-blur-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Key className="h-5 w-5 text-zinc-400" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-white">Google Gemini API Key</h3>
-                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
-                  Fallback Provider
-                </span>
-              </div>
-              <span className="text-[11px] text-zinc-400">Secondary fallback engine if Groq reaches rate limits</span>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSaveGeminiKey} className="flex gap-2 pt-2">
-          <input
-            type="password"
-            value={geminiKey}
-            onChange={(e) => setGeminiKey(e.target.value)}
-            placeholder="AIzaSy..."
-            className="glass-input flex-1 rounded-xl px-4 py-2.5 text-xs font-mono text-zinc-200"
-          />
-          <button
-            type="submit"
-            className="rounded-xl bg-zinc-800 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-700 cursor-pointer"
-          >
-            {geminiKeySaved ? 'Saved!' : 'Update Key'}
-          </button>
         </form>
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
-import { generateDocumentStudyMap } from '../../lib/gemini';
+import { generateGroqDocumentStudyMap } from '../../lib/groq';
 import { Concept } from '../../types/subject';
 import { Question } from '../../types/assessment';
 import { UploadedDocument } from '../../types/document';
@@ -31,7 +31,7 @@ export const DocumentImportScreen: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      const result = await generateDocumentStudyMap(docText, docTitle);
+      const result = await generateGroqDocumentStudyMap(docText, docTitle);
 
       const generatedConcepts: Concept[] = result.concepts.map((c, i) => ({
         id: `custom-concept-${Date.now()}-${i}`,

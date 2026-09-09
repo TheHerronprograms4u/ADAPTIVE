@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdaptive } from '../../context/AdaptiveContext';
 import { Play, Pause, RotateCcw, Minimize2, Sparkles, Send, Bot, CheckCircle2 } from 'lucide-react';
-import { askGeminiTutor } from '../../lib/gemini';
+import { askGroqTutor } from '../../lib/groq';
 import { MathText } from '../shared/MathText';
 
 export const FocusModeOverlay: React.FC = () => {
@@ -52,7 +52,7 @@ export const FocusModeOverlay: React.FC = () => {
     const conceptSummary = selectedConcept?.summary || 'Foundational mathematical theory';
     const mastery = selectedConcept ? (userConceptStates[selectedConcept.id]?.masteryScore || 0.7) : 0.7;
 
-    const answer = await askGeminiTutor({
+    const answer = await askGroqTutor({
       learnerName: profile.name,
       educationLevel: profile.educationLevel,
       conceptName,

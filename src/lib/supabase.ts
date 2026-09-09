@@ -13,7 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
+    flowType: 'pkce',
   },
 });
 
@@ -71,7 +72,7 @@ export async function fetchProfileFromSupabase(userId: string): Promise<LearnerP
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
 

@@ -11,6 +11,9 @@ import {
   User,
   LogOut,
   Settings,
+  BookOpen,
+  ChevronDown,
+  Brain,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -24,6 +27,7 @@ export const Header: React.FC = () => {
     markNotificationAsRead,
     navigateTo,
     signOut,
+    setIsSubjectSelectorOpen,
   } = useAdaptive();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -43,10 +47,41 @@ export const Header: React.FC = () => {
               <Flame className="h-3 w-3 fill-current text-amber-400" />
               <span>{profile.currentStreakDays}d streak</span>
             </div>
+
+            {/* Teaching persona badge */}
+            {profile.empiricalTeachingStyle ? (
+              <button
+                onClick={() => navigateTo('preliminary_exam')}
+                title="View or retake preliminary cognitive diagnosis"
+                className="hidden xl:flex items-center gap-1 rounded-full border border-indigo-500/30 bg-indigo-500/15 px-2.5 py-0.5 text-[11px] font-medium text-indigo-300 hover:bg-indigo-500/25 transition-all cursor-pointer"
+              >
+                <Brain className="h-3 w-3 text-indigo-400" />
+                <span>{profile.empiricalTeachingStyle.personaName}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => navigateTo('preliminary_exam')}
+                title="Take preliminary cognitive diagnostic exam"
+                className="hidden xl:flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/15 px-2.5 py-0.5 text-[11px] font-medium text-purple-300 hover:bg-purple-500/25 transition-all cursor-pointer animate-pulse"
+              >
+                <Sparkles className="h-3 w-3 text-purple-400" />
+                <span>Diagnose Modality</span>
+              </button>
+            )}
           </div>
-          <p className="text-[11px] text-zinc-400">
-            System dynamic path calibrated for <span className="text-indigo-300 font-medium">{activeSubject.name}</span>
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-[11px] text-zinc-400 hidden sm:inline">
+              Calibrated for:
+            </p>
+            <button
+              onClick={() => setIsSubjectSelectorOpen(true)}
+              className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 text-[11px] font-medium text-indigo-300 transition-all cursor-pointer"
+            >
+              <BookOpen className="h-3 w-3 text-indigo-400" />
+              <span className="max-w-[140px] truncate">{activeSubject.name}</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </button>
+          </div>
         </div>
       </div>
 

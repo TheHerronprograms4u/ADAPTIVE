@@ -232,3 +232,228 @@ Return ONLY a valid JSON object with the following schema (no backticks, no mark
     ]
   };
 }
+
+export async function generateSchoolSubjectCurriculum(
+  subjectName: string,
+  gradeLevel: string = 'High School / AP',
+  customDescription?: string
+): Promise<{
+  subject: {
+    name: string;
+    description: string;
+    domain: string;
+    gradeLevel: string;
+    accentColor: string;
+  };
+  concepts: Array<{
+    name: string;
+    shortCode: string;
+    summary: string;
+    detailedTheory: string;
+    keyFormulas?: string[];
+    intuitionAnalogy?: string;
+    difficultyBase: number;
+    prerequisiteNames: string[];
+    misconceptions: Array<{
+      name: string;
+      description: string;
+      remediationAdvice: string;
+    }>;
+  }>;
+  questions: Array<{
+    conceptName: string;
+    prompt: string;
+    difficulty: number;
+    options: Array<{
+      id: string;
+      text: string;
+      isCorrect: boolean;
+      misconceptionExplanation?: string;
+    }>;
+    detailedSolution: string;
+    intuitionTakeaway: string;
+  }>;
+}> {
+  const prompt = `You are a world-class curriculum and learning science architect. Generate a complete, rigorous, high-quality educational knowledge graph for ANY school subject or topic.
+Subject / Topic: "${subjectName}"
+Target Grade / Academic Level: "${gradeLevel}"
+${customDescription ? `Additional Context/Syllabus: "${customDescription}"` : ''}
+
+Generate 4 to 6 core sequential concepts forming a prerequisite hierarchy, along with 4 to 8 diagnostic multiple-choice questions with deep mathematical/conceptual explanations and clear distractors.
+
+Return ONLY a valid JSON object matching this schema (no markdown formatting, no code block delimiters, strict JSON):
+{
+  "subject": {
+    "name": "${subjectName}",
+    "description": "2-sentence comprehensive description of what this school course covers.",
+    "domain": "mathematics", // one of: mathematics, science, physics_engineering, science_biology, chemistry, computer_science, humanities_english, history_social_studies, foreign_languages, economics_business, test_prep
+    "gradeLevel": "${gradeLevel}",
+    "accentColor": "#6366f1"
+  },
+  "concepts": [
+    {
+      "name": "Concept 1 Name (e.g. Foundational Axiom)",
+      "shortCode": "CODE.1",
+      "summary": "1-2 sentence core overview",
+      "detailedTheory": "Comprehensive explanation of first principles, mechanisms, and rules. Use LaTeX $...$ or $$...$$ where relevant.",
+      "keyFormulas": ["Formula or Rule 1", "Formula or Rule 2"],
+      "intuitionAnalogy": "A vivid physical metaphor or mental model that makes the concept click instantly.",
+      "difficultyBase": 0.35,
+      "prerequisiteNames": [],
+      "misconceptions": [
+        {
+          "name": "Common Misconception Name",
+          "description": "What students mistakenly think or do.",
+          "remediationAdvice": "How to correct this error."
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "conceptName": "Concept 1 Name",
+      "prompt": "Rigorous diagnostic problem or question testing deep first-principles understanding.",
+      "difficulty": 0.45,
+      "options": [
+        { "id": "opt-1", "text": "Correct Answer", "isCorrect": true },
+        { "id": "opt-2", "text": "Distractor based on misconception", "isCorrect": false, "misconceptionExplanation": "Why this distractor is a trap." },
+        { "id": "opt-3", "text": "Another distractor", "isCorrect": false },
+        { "id": "opt-4", "text": "Another distractor", "isCorrect": false }
+      ],
+      "detailedSolution": "Step-by-step derivation or proof showing why option 1 is correct.",
+      "intuitionTakeaway": "Anchor takeaway in 1 memorable sentence."
+    }
+  ]
+}`;
+
+  const apiKey = getGroqApiKey();
+  const model = getGroqModel();
+
+  if (apiKey) {
+    try {
+      const response = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You are an educational AI architect that outputs strict, valid JSON without backticks or prefixes.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          const parsed = JSON.parse(content);
+          if (parsed.concepts && parsed.concepts.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Groq subject generation fallback:', err);
+    }
+  }
+
+  // Fallback Curriculum Generator for any school subject
+  const safeName = subjectName || 'General Academic Curriculum';
+  return {
+    subject: {
+      name: safeName,
+      description: `Comprehensive curriculum structure for ${safeName} designed for ${gradeLevel}. Covers foundational principles, procedural problem-solving, and advanced applications.`,
+      domain: 'science',
+      gradeLevel,
+      accentColor: '#6366f1',
+    },
+    concepts: [
+      {
+        name: `${safeName}: Core Fundamentals`,
+        shortCode: 'BAS.1',
+        summary: `Essential definitions, baseline mechanics, and primary axioms of ${safeName}.`,
+        detailedTheory: `In ${safeName}, foundational principles govern all subsequent derivations. Mastery begins by isolating invariant constraints and understanding boundary behavior.`,
+        keyFormulas: ['A(x) = B(x)', 'Invariant = Constant'],
+        intuitionAnalogy: `Think of this like the foundation of a building: every complex structure in ${safeName} relies on these non-negotiable bedrock principles.`,
+        difficultyBase: 0.35,
+        prerequisiteNames: [],
+        misconceptions: [
+          {
+            name: 'Overgeneralization Trap',
+            description: 'Applying initial assumptions beyond their valid domain boundaries.',
+            remediationAdvice: 'Always verify if the initial conditions and domain constraints are satisfied before applying rules.'
+          }
+        ]
+      },
+      {
+        name: `${safeName}: Analytical Systems & Operations`,
+        shortCode: 'SYS.2',
+        summary: `Step-by-step operational schemas and dynamic transformations in ${safeName}.`,
+        detailedTheory: `When multiple variables or constraints interact in ${safeName}, we apply systematic transformations to isolate unknown states while preserving invariant relations.`,
+        keyFormulas: ['f(g(x)) = y', '\\Delta S \\ge 0'],
+        intuitionAnalogy: `Like a high-precision gear assembly: turning one component predictably engages the entire mechanism.`,
+        difficultyBase: 0.55,
+        prerequisiteNames: [`${safeName}: Core Fundamentals`],
+        misconceptions: [
+          {
+            name: 'Order of Operations Slip',
+            description: 'Executing secondary transformations before resolving foundational constraints.',
+            remediationAdvice: 'Follow the strict canonical sequence from inner invariants outward.'
+          }
+        ]
+      },
+      {
+        name: `${safeName}: Advanced Synthesis & Problem Solving`,
+        shortCode: 'ADV.3',
+        summary: `Complex multi-step problems, synthesis scenarios, and edge-case boundary analysis.`,
+        detailedTheory: `Higher-order mastery of ${safeName} requires synthesizing disparate modules into unified problem derivations, evaluating asymptotic limits, and debugging subtle reasoning slips.`,
+        keyFormulas: ['\\lim_{t \\to \\infty} \\Psi(t) = \\Phi', '\\nabla \\cdot F = \\rho'],
+        intuitionAnalogy: `Navigating an open-world map: rather than following a single scripted trail, you choose the optimal derivation path based on terrain constraints.`,
+        difficultyBase: 0.75,
+        prerequisiteNames: [`${safeName}: Analytical Systems & Operations`],
+        misconceptions: [
+          {
+            name: 'False Symmetry Fallacy',
+            description: 'Assuming reciprocal effects are always identical in asymmetric conditions.',
+            remediationAdvice: 'Check directional constraints and sign parity on all higher-order terms.'
+          }
+        ]
+      }
+    ],
+    questions: [
+      {
+        conceptName: `${safeName}: Core Fundamentals`,
+        prompt: `In the study of ${safeName}, which principle guarantees that core structural invariants remain preserved under standard operational transformations?`,
+        difficulty: 0.40,
+        options: [
+          { id: 'opt-1', text: 'Conservation of baseline constraints across the specified domain', isCorrect: true },
+          { id: 'opt-2', text: 'Arbitrary variable substitution without domain validation', isCorrect: false, misconceptionExplanation: 'Neglects domain constraints.' },
+          { id: 'opt-3', text: 'Inverting boundary constants indiscriminately', isCorrect: false },
+          { id: 'opt-4', text: 'Assuming all operations are unconditionally linear', isCorrect: false }
+        ],
+        detailedSolution: `Foundational axioms in ${safeName} require that invariant constraints remain constant across the entire valid domain. Any transformation must preserve these core conditions.`,
+        intuitionTakeaway: 'Always verify domain constraints before applying transformational rules.'
+      },
+      {
+        conceptName: `${safeName}: Analytical Systems & Operations`,
+        prompt: `When analyzing a dynamic multi-variable system in ${safeName}, what is the recommended first-principles strategy to avoid calculation and procedural slips?`,
+        difficulty: 0.60,
+        options: [
+          { id: 'opt-1', text: 'Isolate primary independent invariants first, then evaluate boundary effects systematically', isCorrect: true },
+          { id: 'opt-2', text: 'Guess the final answer based on superficial symmetry', isCorrect: false },
+          { id: 'opt-3', text: 'Skip foundational steps to expedite final computation', isCorrect: false },
+          { id: 'opt-4', text: 'Assume boundary constraints have zero impact on equilibrium', isCorrect: false }
+        ],
+        detailedSolution: `Isolating invariants reduces cognitive load and guarantees that intermediate steps stay mathematically sound before tackling complex boundary limits.`,
+        intuitionTakeaway: 'Decouple multiple interacting variables step-by-step from first principles.'
+      }
+    ]
+  };
+}
+

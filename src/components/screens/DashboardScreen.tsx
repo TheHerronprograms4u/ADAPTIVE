@@ -14,6 +14,10 @@ import {
   Compass,
   Bot,
   Flame,
+  Brain,
+  BookOpen,
+  Layers,
+  GraduationCap,
 } from 'lucide-react';
 
 export const DashboardScreen: React.FC = () => {
@@ -26,6 +30,7 @@ export const DashboardScreen: React.FC = () => {
     startDynamicSession,
     nextBestAction,
     milestones,
+    setIsSubjectSelectorOpen,
   } = useAdaptive();
 
   const activeConcepts = concepts.filter(c => c.subjectId === activeSubject.id);
@@ -58,9 +63,19 @@ export const DashboardScreen: React.FC = () => {
 
         <div className="relative z-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
           <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/15 px-3 py-1 text-xs font-semibold text-indigo-300">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-              <span>AI Learning Operating System</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/15 px-3 py-1 text-xs font-semibold text-indigo-300">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                <span>AI Universal School OS</span>
+              </div>
+              <button
+                onClick={() => setIsSubjectSelectorOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-800/80 hover:bg-zinc-700/80 px-3 py-1 text-xs font-medium text-zinc-200 transition-all cursor-pointer"
+              >
+                <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Course: {activeSubject.name}</span>
+                <span className="text-[10px] text-zinc-400">(Switch)</span>
+              </button>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
               Your system has prepared today's path.
@@ -92,6 +107,74 @@ export const DashboardScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Empirical Cognitive Calibration Banner / Profile Widget */}
+      {profile.empiricalTeachingStyle ? (
+        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-zinc-900/80 to-indigo-950/30 p-5 backdrop-blur-xl">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-300">
+                <Brain className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-400">
+                    Empirically Calibrated Teaching Persona
+                  </span>
+                  <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-300 border border-purple-500/30">
+                    Diagnostic Active
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white">
+                  {profile.empiricalTeachingStyle.personaName}
+                </h3>
+                <p className="mt-0.5 text-xs text-zinc-300 max-w-2xl">
+                  {profile.empiricalTeachingStyle.pedagogyDirective}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="hidden lg:flex flex-col text-right text-xs mr-2">
+                <span className="text-zinc-400 text-[10px]">Dominant Modality</span>
+                <span className="font-semibold text-indigo-300 capitalize">
+                  {profile.empiricalTeachingStyle.primaryModality.replace('_', ' ')}
+                </span>
+              </div>
+              <button
+                onClick={() => navigateTo('preliminary_exam')}
+                className="rounded-xl border border-purple-500/40 bg-purple-500/15 px-3.5 py-2 text-xs font-semibold text-purple-200 hover:bg-purple-500/25 transition-all cursor-pointer"
+              >
+                View Diagnostic Data →
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-purple-500/40 bg-gradient-to-r from-purple-950/20 via-zinc-900/60 to-indigo-950/20 p-5 backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 animate-pulse">
+                <Brain className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  Take the Preliminary Cognitive Diagnostic Exam
+                </h3>
+                <p className="mt-0.5 text-xs text-zinc-300">
+                  Assess your visual, deductive, procedural, and calibration profiles so the AI platform can tailor its teaching style to your empirical baseline.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigateTo('preliminary_exam')}
+              className="rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-purple-600/25 shrink-0 transition-all cursor-pointer"
+            >
+              Start Diagnostic (4 min) →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Metrics Triad & Momentum Bar */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
-  const { updateProfile, navigateTo, setIsAuthenticated } = useAdaptive();
+  const { updateProfile, navigateTo, setIsAuthenticated, profile } = useAdaptive();
 
   const [mode, setMode] = useState<'signup' | 'signin'>('signin');
   const [name, setName] = useState<string>('');
@@ -92,7 +92,8 @@ export const AuthScreen: React.FC = () => {
           }
 
           setIsAuthenticated(true);
-          navigateTo('dashboard');
+          // Existing learners who already took the diagnostic go straight in; new ones are gated
+          navigateTo(profile.preliminaryExamTaken ? 'dashboard' : 'onboarding');
         }
       } else {
         // Fallback local update
@@ -101,11 +102,7 @@ export const AuthScreen: React.FC = () => {
           name: name.trim() || 'Learner',
           email: email.trim(),
         });
-        if (mode === 'signup') {
-          navigateTo('onboarding');
-        } else {
-          navigateTo('dashboard');
-        }
+        navigateTo(profile.preliminaryExamTaken ? 'dashboard' : 'onboarding');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected error occurred.');
@@ -120,6 +117,8 @@ export const AuthScreen: React.FC = () => {
       navigateTo('onboarding');
       return;
     }
+    // Note: for OAuth, the onAuthStateChange listener in AdaptiveContext handles the
+    // preliminary-exam gate by routing to onboarding when profile.preliminaryExamTaken is false.
 
     try {
       setIsLoading(true);

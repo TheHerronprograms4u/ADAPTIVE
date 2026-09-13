@@ -4,14 +4,23 @@ import { Subject, Concept, UserConceptState } from '../types/subject';
 import { Question, UserAttempt, DiagnosticAssessmentState, ConfidenceRating } from '../types/assessment';
 import { DynamicLearningSession, AdaptiveRecommendation } from '../types/engine';
 import { UploadedDocument, ExamPreparationPlan } from '../types/document';
-import { DEFAULT_SUBJECTS } from '../data/defaultSubjects';
+import { SCHOOL_SUBJECTS } from '../data/schoolSubjects';
 import { DEFAULT_CONCEPTS, DEFAULT_QUESTIONS } from '../data/defaultCurriculum';
-import { calculateBKTUpdate, determineMasteryTier, confidenceRatingToScalar, calculateCalibrationScore, computeContinuousDifficulty } from '../lib/learningEngine';
+import {
+  calculateBKTUpdate,
+  determineMasteryTier,
+  confidenceRatingToScalar,
+  calculateCalibrationScore,
+  computeContinuousDifficulty,
+  evaluatePreliminaryExam,
+} from '../lib/learningEngine';
 import { processSpacedRepetitionReview } from '../lib/spacedRepetition';
 import { classifyUserError } from '../lib/misconceptionClassifier';
 import { computeNextBestLearningAction } from '../lib/recommendationEngine';
 import { generatePersonalizedSession } from '../lib/sessionGenerator';
 import { soundEffects } from '../lib/audioEffects';
+import { generateSchoolSubjectCurriculum } from '../lib/groq';
+import { PreliminaryExamAttempt, PreliminaryExamResult } from '../types/preliminaryExam';
 import { supabase, syncProfileToSupabase, fetchProfileFromSupabase, syncConceptStatesToSupabase, saveAttemptToSupabase, saveDocumentToSupabase } from '../lib/supabase';
 
 export type ScreenName = 
@@ -19,6 +28,7 @@ export type ScreenName =
   | 'welcome'
   | 'auth'
   | 'onboarding'
+  | 'preliminary_exam'
   | 'diagnostic'
   | 'dashboard'
   | 'session'
@@ -67,6 +77,20 @@ interface AdaptiveContextType {
   selectedConceptId: string | null;
   setSelectedConceptId: (id: string | null) => void;
   selectedConcept: Concept | null;
+
+  // Preliminary Diagnostic Exam & Empirical Modalities
+  preliminaryAttempts: PreliminaryExamAttempt[];
+  preliminaryResult: PreliminaryExamResult | null;
+  submitPreliminaryAttempt: (attempt: PreliminaryExamAttempt) => void;
+  finishPreliminaryExam: () => PreliminaryExamResult;
+
+  // School Curriculum & Custom Subject Generation
+  createCustomSchoolSubject: (name: string, gradeLevel: string, description?: string) => Promise<Subject>;
+  createCustomTopic: (topic: string, description?: string) => Promise<Subject>;
+  isGeneratingTopic: boolean;
+  switchSubject: (subjectId: string) => void;
+  isSubjectSelectorOpen: boolean;
+  setIsSubjectSelectorOpen: (open: boolean) => void;
   
   // Dynamic Session
   currentSession: DynamicLearningSession | null;
@@ -114,8 +138,8 @@ const INITIAL_PROFILE: LearnerProfile = {
   id: '',
   name: 'Learner',
   avatarSeed: 'learner',
-  educationLevel: 'undergraduate',
-  primarySubjectId: 'subj-math',
+  educationLevel: 'high_school',
+  primarySubjectId: 'subj-math-alg',
   targetGoal: 'master_subject',
   preferredSessionMinutes: 25,
   pacePreference: 'balanced',
@@ -128,6 +152,7 @@ const INITIAL_PROFILE: LearnerProfile = {
     directExplanation: 0.8,
     analogies: 0.85,
   },
+  preliminaryExamTaken: false,
   overallMastery: 0.0,
   overallRetention: 1.0,
   learningMomentum: 0,
@@ -191,8 +216,50 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return INITIAL_PROFILE;
   });
 
-  const [subjects] = useState<Subject[]>(DEFAULT_SUBJECTS);
-  const [activeSubjectId, setActiveSubjectId] = useState<string>('subj-math');
+  // Latest profile reference for the (mount-once) auth listener, without re-subscribing
+  const profileRef = React.useRef(profile);
+  React.useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const [subjects, setSubjects] = useState<Subject[]>(() => {
+    const saved = localStorage.getItem('adaptive_subjects');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // ignore
+      }
+    }
+    return SCHOOL_SUBJECTS;
+  });
+
+  const [activeSubjectId, setActiveSubjectId] = useState<string>(() => {
+    const saved = localStorage.getItem('adaptive_active_subject_id');
+    return saved || 'subj-math-alg';
+  });
+
+  const [preliminaryAttempts, setPreliminaryAttempts] = useState<PreliminaryExamAttempt[]>(() => {
+    const saved = localStorage.getItem('adaptive_prelim_attempts');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { // ignore
+      }
+    }
+    return [];
+  });
+
+  const [preliminaryResult, setPreliminaryResult] = useState<PreliminaryExamResult | null>(() => {
+    const saved = localStorage.getItem('adaptive_prelim_result');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { // ignore
+      }
+    }
+    return null;
+  });
+
+  const [isSubjectSelectorOpen, setIsSubjectSelectorOpen] = useState<boolean>(false);
+  const [isGeneratingTopic, setIsGeneratingTopic] = useState<boolean>(false);
   const [concepts, setConcepts] = useState<Concept[]>(DEFAULT_CONCEPTS);
   const [questions, setQuestions] = useState<Question[]>(DEFAULT_QUESTIONS);
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(DEFAULT_CONCEPTS[0]?.id || null);
@@ -310,7 +377,8 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               return updated;
             });
           }
-          setCurrentScreen('dashboard');
+          // First-time users must complete the preliminary cognitive exam before anything else
+          setCurrentScreen(cloudProfile?.preliminaryExamTaken ? 'dashboard' : 'onboarding');
         } else {
           setIsAuthenticated(false);
           setCurrentScreen('auth');
@@ -354,7 +422,13 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
           }
         }
-        setCurrentScreen(prev => (prev === 'auth' || prev === 'welcome' || prev === 'splash' ? 'dashboard' : prev));
+        setCurrentScreen(prev => {
+          if (prev === 'auth' || prev === 'welcome' || prev === 'splash') {
+            // Route through onboarding + preliminary exam for first-time learners
+            return profileRef.current.preliminaryExamTaken ? 'dashboard' : 'onboarding';
+          }
+          return prev;
+        });
       } else if (event === 'SIGNED_OUT' || !session?.user) {
         setIsAuthenticated(false);
         setProfile(INITIAL_PROFILE);
@@ -686,6 +760,196 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     navigateTo('knowledge_galaxy');
   };
 
+  const submitPreliminaryAttempt = (attempt: PreliminaryExamAttempt) => {
+    setPreliminaryAttempts(prev => {
+      const filtered = prev.filter(a => a.questionId !== attempt.questionId);
+      const updated = [...filtered, attempt];
+      localStorage.setItem('adaptive_prelim_attempts', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const finishPreliminaryExam = (): PreliminaryExamResult => {
+    const evalResult = evaluatePreliminaryExam(preliminaryAttempts);
+    setPreliminaryResult(evalResult);
+    localStorage.setItem('adaptive_prelim_result', JSON.stringify(evalResult));
+
+    const updatedProfile: LearnerProfile = {
+      ...profile,
+      preliminaryExamTaken: true,
+      empiricalTeachingStyle: evalResult.empiricalTeachingStyle,
+      modalities: evalResult.modalityWeights,
+      personaType: evalResult.empiricalTeachingStyle.personaName.toLowerCase().includes('visual') ? 'intuitive' :
+                   evalResult.empiricalTeachingStyle.personaName.toLowerCase().includes('socratic') ? 'socratic' :
+                   evalResult.empiricalTeachingStyle.personaName.toLowerCase().includes('practitioner') ? 'systematic' :
+                   evalResult.empiricalTeachingStyle.personaName.toLowerCase().includes('rigorist') ? 'analytical' : 'experimental',
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem('adaptive_profile', JSON.stringify(updatedProfile));
+    if (isAuthenticated) {
+      syncProfileToSupabase(updatedProfile);
+    }
+    return evalResult;
+  };
+
+  const switchSubject = (subjectId: string) => {
+    setActiveSubjectId(subjectId);
+    localStorage.setItem('adaptive_active_subject_id', subjectId);
+    const subjConcepts = concepts.filter(c => c.subjectId === subjectId);
+    if (subjConcepts.length > 0) {
+      setSelectedConceptId(subjConcepts[0].id);
+    }
+  };
+
+  const buildGeneratedSubject = async (
+    name: string,
+    gradeLevel: string,
+    description?: string,
+    isCustomTopic: boolean = false
+  ): Promise<Subject> => {
+    const generated = await generateSchoolSubjectCurriculum(name, gradeLevel, description);
+    
+    const newSubjectId = `subj-custom-${Date.now()}`;
+    const newSubject: Subject = {
+      id: newSubjectId,
+      name: generated.subject.name,
+      domain: (generated.subject.domain as any) || 'custom_imported',
+      description: generated.subject.description,
+      icon: 'Sparkles',
+      accentColor: generated.subject.accentColor || '#6366f1',
+      gradeLevel: generated.subject.gradeLevel,
+      topicIds: [`top-${newSubjectId}`],
+      totalConcepts: generated.concepts.length,
+      isCustom: true,
+    };
+
+    if (isCustomTopic) {
+      newSubject.description = `Your personal learning track: ${generated.subject.description}`;
+    }
+
+    const newConcepts: Concept[] = generated.concepts.map((c, idx) => {
+      // Honor AI-declared prerequisites (by name) when they resolve to generated concepts;
+      // fall back to a simple linear chain so the knowledge graph is always connected.
+      const nameToId = new Map<string, string>();
+      generated.concepts.forEach((gc, gIdx) => {
+        nameToId.set(gc.name.toLowerCase().trim(), `concept-${newSubjectId}-${gIdx + 1}`);
+      });
+      const resolvedPrereqIds = (c.prerequisiteNames || [])
+        .map(n => nameToId.get(String(n).toLowerCase().trim()))
+        .filter((id): id is string => Boolean(id) && id !== `concept-${newSubjectId}-${idx + 1}`);
+      const fallbackPrereqIds = idx === 0 ? [] : [`concept-${newSubjectId}-${idx}`];
+      const prerequisiteIds = resolvedPrereqIds.length > 0 ? resolvedPrereqIds : fallbackPrereqIds;
+
+      return {
+        id: `concept-${newSubjectId}-${idx + 1}`,
+        subjectId: newSubjectId,
+        topicId: `top-${newSubjectId}`,
+        name: c.name,
+        shortCode: c.shortCode || `C.${idx + 1}`,
+        summary: c.summary,
+        detailedTheory: c.detailedTheory,
+        keyFormulas: c.keyFormulas || [],
+        intuitionAnalogy: c.intuitionAnalogy,
+        difficultyBase: typeof c.difficultyBase === 'number' ? c.difficultyBase : 0.5,
+        prerequisiteIds,
+        visualGalaxyCoords: {
+          x: 150 + idx * 120,
+          y: 200 + (idx % 2 === 0 ? 50 : -40),
+          cluster: newSubjectId,
+        },
+        misconceptions: (c.misconceptions || []).map((m, mIdx) => ({
+          id: `misc-${newSubjectId}-${idx}-${mIdx}`,
+          category: 'conceptual_misunderstanding',
+          name: m.name,
+          description: m.description,
+          frequency: 0.4,
+          detectedCount: 0,
+          remediationAdvice: m.remediationAdvice,
+        })),
+      };
+    });
+
+    const newQuestions: Question[] = generated.questions.map((q, qIdx) => {
+      const matchedConcept = newConcepts.find(c => c.name === q.conceptName) || newConcepts[0];
+      return {
+        id: `q-${newSubjectId}-${qIdx + 1}`,
+        conceptId: matchedConcept.id,
+        conceptName: matchedConcept.name,
+        difficulty: q.difficulty || 0.5,
+        discrimination: 1.2,
+        type: 'multiple_choice',
+        prompt: q.prompt,
+        options: q.options.map((opt, oIdx) => ({
+          id: opt.id || `opt-${oIdx + 1}`,
+          text: opt.text,
+          isCorrect: opt.isCorrect,
+          misconceptionExplanation: opt.misconceptionExplanation,
+        })),
+        detailedSolution: q.detailedSolution,
+        intuitionTakeaway: q.intuitionTakeaway,
+      };
+    });
+
+    // Update state & persistence
+    setSubjects(prev => {
+      const updated = [newSubject, ...prev];
+      localStorage.setItem('adaptive_subjects', JSON.stringify(updated));
+      return updated;
+    });
+
+    setConcepts(prev => [...prev, ...newConcepts]);
+    setQuestions(prev => [...prev, ...newQuestions]);
+
+    setUserConceptStates(prev => {
+      const updated = { ...prev };
+      newConcepts.forEach(c => {
+        updated[c.id] = {
+          userId: profile.id,
+          conceptId: c.id,
+          masteryScore: 0.0,
+          confidenceScore: 0.5,
+          retentionScore: 1.0,
+          masteryTier: 'novice',
+          stabilityDays: 1.0,
+          difficultyRating: c.difficultyBase,
+          repsCount: 0,
+          lapsesCount: 0,
+          lastReviewedAt: new Date().toISOString(),
+          nextReviewAt: new Date().toISOString(),
+          forgettingProbability: 0.0,
+          totalAttempts: 0,
+          correctAttempts: 0,
+          accuracyRate: 0.0,
+          averageResponseTimeSeconds: 0,
+          last5Accuracy: [],
+          misconceptionHistory: [],
+          isPrerequisiteBottleneck: false,
+          recommendedNextAction: 'learn',
+        };
+      });
+      localStorage.setItem('adaptive_concept_states', JSON.stringify(updated));
+      return updated;
+    });
+
+    setActiveSubjectId(newSubjectId);
+    setSelectedConceptId(newConcepts[0].id);
+    localStorage.setItem('adaptive_active_subject_id', newSubjectId);
+
+    return newSubject;
+  };
+
+  const createCustomSchoolSubject = (name: string, gradeLevel: string, description?: string): Promise<Subject> =>
+    buildGeneratedSubject(name, gradeLevel, description, false);
+
+  const createCustomTopic = async (topic: string, description?: string): Promise<Subject> => {
+    setIsGeneratingTopic(true);
+    try {
+      return await buildGeneratedSubject(topic, profile.educationLevel === 'lifelong_learner' ? 'Lifelong / Self-Paced' : 'Universal', description, true);
+    } finally {
+      setIsGeneratingTopic(false);
+    }
+  };
+
   const addUploadedDocument = (doc: UploadedDocument) => {
     setUploadedDocuments(prev => [doc, ...prev]);
     saveDocumentToSupabase(doc);
@@ -752,6 +1016,16 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         selectedConceptId,
         setSelectedConceptId,
         selectedConcept,
+        preliminaryAttempts,
+        preliminaryResult,
+        submitPreliminaryAttempt,
+        finishPreliminaryExam,
+        createCustomSchoolSubject,
+        createCustomTopic,
+        isGeneratingTopic,
+        switchSubject,
+        isSubjectSelectorOpen,
+        setIsSubjectSelectorOpen,
         currentSession,
         startDynamicSession,
         advanceSessionPhase,

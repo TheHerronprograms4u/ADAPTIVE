@@ -17,6 +17,9 @@ import {
   Cpu,
   Dna,
   Atom,
+  Brain,
+  Plus,
+  BookOpen,
 } from 'lucide-react';
 
 interface NavItem {
@@ -29,6 +32,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { screen: 'dashboard', label: 'Home Dashboard', icon: LayoutDashboard },
+  { screen: 'preliminary_exam', label: 'Cognitive Diagnosis', icon: Brain, badge: 'Diagnostic', badgeColor: 'bg-purple-500/20 text-purple-300' },
   { screen: 'knowledge_galaxy', label: 'Knowledge Galaxy', icon: Compass, badge: 'Live', badgeColor: 'bg-indigo-500/20 text-indigo-300' },
   { screen: 'session', label: 'Learning Session', icon: PlayCircle, badge: 'Adaptive', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
   { screen: 'tutor', label: 'AI Tutor Companion', icon: Bot },
@@ -49,6 +53,7 @@ export const Sidebar: React.FC = () => {
     subjects,
     activeSubjectId,
     setActiveSubjectId,
+    setIsSubjectSelectorOpen,
   } = useAdaptive();
 
   const getSubjectIcon = (iconName: string) => {
@@ -57,7 +62,8 @@ export const Sidebar: React.FC = () => {
       case 'Cpu': return <Cpu className="h-4 w-4 text-cyan-400" />;
       case 'Dna': return <Dna className="h-4 w-4 text-emerald-400" />;
       case 'Atom': return <Atom className="h-4 w-4 text-amber-400" />;
-      default: return <Sigma className="h-4 w-4 text-indigo-400" />;
+      case 'BookOpen': return <BookOpen className="h-4 w-4 text-purple-400" />;
+      default: return <BookOpen className="h-4 w-4 text-indigo-400" />;
     }
   };
 
@@ -74,18 +80,28 @@ export const Sidebar: React.FC = () => {
               <span className="font-mono text-base font-extrabold tracking-wider text-white">ADAPTIVE</span>
               <span className="rounded bg-indigo-500/20 px-1 py-0.2 text-[9px] font-semibold text-indigo-300">OS</span>
             </div>
-            <p className="text-[10px] font-medium text-zinc-400 tracking-tight">AI Personalized Learning</p>
+            <p className="text-[10px] font-medium text-zinc-400 tracking-tight">Universal School Learning</p>
           </div>
         </div>
       </div>
 
       {/* Active Subject Selector */}
       <div className="mb-4">
-        <label className="mb-1.5 block px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-          Knowledge Domain
-        </label>
+        <div className="mb-1.5 flex items-center justify-between px-2">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            School Courses
+          </label>
+          <button
+            onClick={() => setIsSubjectSelectorOpen(true)}
+            title="Browse all school subjects or generate custom course"
+            className="flex items-center gap-1 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
+          >
+            <Plus className="h-3 w-3" />
+            <span>Courses</span>
+          </button>
+        </div>
         <div className="space-y-1">
-          {subjects.map((sub) => {
+          {subjects.slice(0, 4).map((sub) => {
             const isActive = activeSubjectId === sub.id;
             return (
               <button
@@ -105,6 +121,14 @@ export const Sidebar: React.FC = () => {
               </button>
             );
           })}
+
+          <button
+            onClick={() => setIsSubjectSelectorOpen(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/15 bg-zinc-900/40 px-2.5 py-1.5 text-center text-xs font-medium text-zinc-400 hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-indigo-300 transition-all cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5 text-indigo-400" />
+            <span>All Courses & AI Gen...</span>
+          </button>
         </div>
       </div>
 

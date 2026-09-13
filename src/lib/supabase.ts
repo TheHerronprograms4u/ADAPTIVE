@@ -50,6 +50,8 @@ export async function syncProfileToSupabase(profile: LearnerProfile) {
         accuracy_rate: profile.accuracyRate,
         average_response_time_seconds: profile.averageResponseTimeSeconds,
         persona_type: profile.personaType,
+        preliminary_exam_taken: profile.preliminaryExamTaken,
+        empirical_teaching_style: profile.empiricalTeachingStyle,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
 
@@ -97,6 +99,8 @@ export async function fetchProfileFromSupabase(userId: string): Promise<LearnerP
         directExplanation: 0.8,
         analogies: 0.85,
       },
+      preliminaryExamTaken: Boolean(data.preliminary_exam_taken),
+      empiricalTeachingStyle: data.empirical_teaching_style || undefined,
       overallMastery: data.overall_mastery ?? 0.0,
       overallRetention: data.overall_retention ?? 1.0,
       learningMomentum: data.learning_momentum ?? 0,

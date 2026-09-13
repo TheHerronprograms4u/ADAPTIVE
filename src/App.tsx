@@ -10,6 +10,7 @@ import { SplashScreen } from './components/screens/SplashScreen';
 import { WelcomeScreen } from './components/screens/WelcomeScreen';
 import { AuthScreen } from './components/screens/AuthScreen';
 import { OnboardingScreen } from './components/screens/OnboardingScreen';
+import { PreliminaryExamScreen } from './components/screens/PreliminaryExamScreen';
 import { DiagnosticScreen } from './components/screens/DiagnosticScreen';
 import { DashboardScreen } from './components/screens/DashboardScreen';
 import { SessionRunnerScreen } from './components/screens/SessionRunnerScreen';
@@ -24,11 +25,12 @@ import { DocumentImportScreen } from './components/screens/DocumentImportScreen'
 import { AchievementsScreen } from './components/screens/AchievementsScreen';
 import { ProfileScreen } from './components/screens/ProfileScreen';
 import { SettingsScreen } from './components/screens/SettingsScreen';
+import { SubjectSelectorModal } from './components/screens/SubjectSelectorModal';
 
 import { Zap, Sparkles } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { currentScreen, isAuthenticated, isAuthChecking } = useAdaptive();
+  const { currentScreen, isAuthenticated, isAuthChecking, isSubjectSelectorOpen, setIsSubjectSelectorOpen } = useAdaptive();
 
   if (isAuthChecking) {
     return (
@@ -66,6 +68,8 @@ const MainAppContent: React.FC = () => {
         return <AuthScreen />;
       case 'onboarding':
         return <OnboardingScreen />;
+      case 'preliminary_exam':
+        return <PreliminaryExamScreen />;
       case 'diagnostic':
         return <DiagnosticScreen />;
       case 'dashboard':
@@ -105,7 +109,8 @@ const MainAppContent: React.FC = () => {
     currentScreen === 'splash' ||
     currentScreen === 'welcome' ||
     currentScreen === 'auth' ||
-    currentScreen === 'onboarding';
+    currentScreen === 'onboarding' ||
+    currentScreen === 'preliminary_exam';
 
   if (isFullscreenScreen) {
     return (
@@ -113,6 +118,7 @@ const MainAppContent: React.FC = () => {
         <div className="w-full max-w-4xl">
           {renderActiveScreen()}
         </div>
+        <SubjectSelectorModal isOpen={isSubjectSelectorOpen} onClose={() => setIsSubjectSelectorOpen(false)} />
       </main>
     );
   }
@@ -130,6 +136,9 @@ const MainAppContent: React.FC = () => {
           {renderActiveScreen()}
         </main>
       </div>
+
+      {/* Course & Subject Selector Modal */}
+      <SubjectSelectorModal isOpen={isSubjectSelectorOpen} onClose={() => setIsSubjectSelectorOpen(false)} />
 
       {/* Mobile Bottom Dock */}
       <MobileNav />

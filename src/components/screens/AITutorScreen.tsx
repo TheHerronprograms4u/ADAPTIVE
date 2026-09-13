@@ -47,7 +47,10 @@ export const AITutorScreen: React.FC = () => {
 
   const currentConcept = concepts.find(c => c.id === selectedConceptId) || concepts[0];
 
-  const [activeMode, setActiveMode] = useState<TutorMode>('socratic');
+  // Default to the tutor mode empirically calibrated by the preliminary exam
+  const [activeMode, setActiveMode] = useState<TutorMode>(
+    profile.empiricalTeachingStyle?.defaultTutorMode || 'socratic'
+  );
   const [messages, setMessages] = useState<TutorMessage[]>([
     {
       id: 'init-msg',

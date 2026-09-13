@@ -1,6 +1,8 @@
 export type EducationLevel = 
+  | 'elementary'
   | 'middle_school'
   | 'high_school'
+  | 'ap_honors'
   | 'undergraduate'
   | 'graduate'
   | 'professional'
@@ -33,6 +35,20 @@ export interface ModalityWeights {
   analogies: number;       // 0.0 - 1.0
 }
 
+export interface EmpiricalTeachingStyle {
+  personaName: string; // e.g. "Visual-Intuitive Explorer"
+  personaTagline: string;
+  primaryModality: 'visual' | 'socratic' | 'practice' | 'analogies' | 'reading' | 'interactive';
+  secondaryModality: 'visual' | 'socratic' | 'practice' | 'analogies' | 'reading' | 'interactive';
+  pedagogyDirective: string;
+  defaultTutorMode: 'socratic' | 'explain' | 'simplify' | 'deep_dive' | 'analogy' | 'example';
+  scaffoldingLevel: 'high' | 'moderate' | 'minimal';
+  brierScore: number;
+  epistemicConfidenceBias: 'calibrated' | 'overconfident' | 'underconfident';
+  speedAccuracyTradeoff: 'rapid_intuitive' | 'deliberate_rigorous' | 'balanced';
+  assessedAt: string;
+}
+
 export interface LearnerProfile {
   id: string;
   name: string;
@@ -47,6 +63,10 @@ export interface LearnerProfile {
   pacePreference: 'deliberate' | 'balanced' | 'accelerated';
   modalities: ModalityWeights;
   
+  // Preliminary Diagnostic Assessment Status
+  preliminaryExamTaken: boolean;
+  empiricalTeachingStyle?: EmpiricalTeachingStyle;
+
   // Dynamic Real-time Estimated Signals
   overallMastery: number; // 0.0 - 1.0
   overallRetention: number; // 0.0 - 1.0

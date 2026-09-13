@@ -2,9 +2,16 @@ import { MasteryTier } from './learner';
 
 export type SubjectDomain = 
   | 'mathematics'
-  | 'computer_science'
-  | 'science_biology'
+  | 'science'
   | 'physics_engineering'
+  | 'science_biology'
+  | 'chemistry'
+  | 'computer_science'
+  | 'humanities_english'
+  | 'history_social_studies'
+  | 'foreign_languages'
+  | 'economics_business'
+  | 'test_prep'
   | 'custom_imported';
 
 export type MisconceptionCategory = 
@@ -67,8 +74,10 @@ export interface Subject {
   description: string;
   icon: string;
   accentColor: string; // e.g. '#6366f1' or 'indigo'
+  gradeLevel?: string; // e.g. "Middle School", "High School / AP", "College"
   topicIds: string[];
   totalConcepts: number;
+  isCustom?: boolean;
 }
 
 export interface UserConceptState {

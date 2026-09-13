@@ -108,6 +108,33 @@ export const DashboardScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Empty Curriculum State: subject has no generated concepts yet */}
+      {activeConcepts.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-indigo-500/40 bg-gradient-to-r from-indigo-950/20 via-zinc-900/60 to-purple-950/20 p-6 backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  {activeSubject.name} has no curriculum loaded yet
+                </h3>
+                <p className="mt-0.5 text-xs text-zinc-300 max-w-2xl">
+                  Generate an AI-built knowledge graph with lessons, diagnostics, and a spaced-repetition schedule for this course — or switch to a subject that already has content.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsSubjectSelectorOpen(true)}
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/25 shrink-0 transition-all cursor-pointer"
+            >
+              Generate or Switch Course →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Empirical Cognitive Calibration Banner / Profile Widget */}
       {profile.empiricalTeachingStyle ? (
         <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-zinc-900/80 to-indigo-950/30 p-5 backdrop-blur-xl">

@@ -4,6 +4,8 @@
 -- =========================================================
 
 -- 1. Drop existing tables if re-initializing schema cleanly
+-- NOTE: If you have existing data you want to keep, skip the DROP/CREATE block and
+-- run only the "Migration for existing databases" section at the bottom instead.
 DROP TABLE IF EXISTS public.attempts CASCADE;
 DROP TABLE IF EXISTS public.user_concept_states CASCADE;
 DROP TABLE IF EXISTS public.documents CASCADE;
@@ -34,6 +36,8 @@ CREATE TABLE public.profiles (
   accuracy_rate NUMERIC DEFAULT 0.8,
   average_response_time_seconds NUMERIC DEFAULT 12,
   persona_type TEXT DEFAULT 'analytical',
+  preliminary_exam_taken BOOLEAN DEFAULT FALSE,
+  empirical_teaching_style JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -112,4 +116,14 @@ CREATE POLICY "Allow all access to attempts" ON public.attempts FOR ALL USING (t
 CREATE POLICY "Allow all access to documents" ON public.documents FOR ALL USING (true) WITH CHECK (true);
 
 -- 8. Refresh Schema Cache
+NOTIFY pgrst, 'reload schema';
+
+-- =========================================================
+-- Migration for existing databases (idempotent — safe to run anytime)
+-- If your database was created before the preliminary exam feature,
+-- run the two ALTER statements below in the Supabase SQL Editor.
+-- They add the columns the app now expects; existing rows are kept.
+-- =========================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS preliminary_exam_taken BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS empirical_teaching_style JSONB;
 NOTIFY pgrst, 'reload schema';

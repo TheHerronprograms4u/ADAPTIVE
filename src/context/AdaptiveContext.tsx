@@ -623,9 +623,15 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Start Dynamic 5-phase Session
   const startDynamicSession = () => {
+    const subjectConcepts = concepts.filter(c => c.subjectId === activeSubjectId);
+    if (subjectConcepts.length === 0) {
+      // No curriculum for this subject yet: send the learner to generate/switch courses
+      setIsSubjectSelectorOpen(true);
+      return;
+    }
     const session = generatePersonalizedSession(
       activeSubject,
-      concepts.filter(c => c.subjectId === activeSubjectId),
+      subjectConcepts,
       userConceptStates,
       profile,
       questions
@@ -652,7 +658,10 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Computerized Adaptive Diagnostic Assessment
   const startDiagnostic = (subjId: string) => {
-    const subjQuestions = questions.filter(q => q.conceptId.startsWith(subjId === 'subj-math' ? 'math' : subjId === 'subj-cs-ai' ? 'cs' : 'math'));
+    // Only use questions whose concept actually belongs to this subject (works for
+    // pre-coded and AI-generated subjects alike)
+    const subjConceptIds = new Set(concepts.filter(c => c.subjectId === subjId).map(c => c.id));
+    const subjQuestions = questions.filter(q => subjConceptIds.has(q.conceptId));
     // Sort starting from moderate difficulty (0.45 - 0.55)
     const initialQuestions = [...subjQuestions].sort((a, b) => Math.abs(a.difficulty - 0.5) - Math.abs(b.difficulty - 0.5));
     

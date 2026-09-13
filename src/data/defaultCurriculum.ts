@@ -5,7 +5,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   // --- MATHEMATICS: ALGEBRA ---
   {
     id: 'math-alg-vars',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-algebra',
     name: 'Variables & Expressions',
     shortCode: 'ALG.1',
@@ -30,7 +30,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   },
   {
     id: 'math-alg-lin-eq',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-algebra',
     name: 'Linear Equations & Systems',
     shortCode: 'ALG.2',
@@ -55,7 +55,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   },
   {
     id: 'math-alg-quad',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-algebra',
     name: 'Quadratic Functions & Factoring',
     shortCode: 'ALG.3',
@@ -82,7 +82,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   // --- MATHEMATICS: CALCULUS ---
   {
     id: 'math-calc-limits',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-calculus',
     name: 'Limits & Continuity',
     shortCode: 'CALC.1',
@@ -107,7 +107,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   },
   {
     id: 'math-calc-deriv',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-calculus',
     name: 'Derivatives & Rates of Change',
     shortCode: 'CALC.2',
@@ -132,7 +132,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   },
   {
     id: 'math-calc-integrals',
-    subjectId: 'subj-math',
+    subjectId: 'subj-math-alg',
     topicId: 'top-calculus',
     name: 'Definite & Indefinite Integrals',
     shortCode: 'CALC.3',
@@ -159,7 +159,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   // --- COMPUTER SCIENCE & AI ---
   {
     id: 'cs-dsa-complexity',
-    subjectId: 'subj-cs-ai',
+    subjectId: 'subj-cs-intro',
     topicId: 'top-dsa',
     name: 'Asymptotic Complexity (Big-O)',
     shortCode: 'CS.1',
@@ -184,7 +184,7 @@ export const DEFAULT_CONCEPTS: Concept[] = [
   },
   {
     id: 'cs-ai-grad-desc',
-    subjectId: 'subj-cs-ai',
+    subjectId: 'subj-cs-intro',
     topicId: 'top-neural-nets',
     name: 'Gradient Descent & Backpropagation',
     shortCode: 'AI.1',

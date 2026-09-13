@@ -96,7 +96,7 @@ export const AuthScreen: React.FC = () => {
           navigateTo(profile.preliminaryExamTaken ? 'dashboard' : 'onboarding');
         }
       } else {
-        // Fallback local update
+        // Fallback local update (no Supabase credentials configured)
         setIsAuthenticated(true);
         updateProfile({
           name: name.trim() || 'Learner',
@@ -143,15 +143,8 @@ export const AuthScreen: React.FC = () => {
     }
   };
 
-  const handleGuestContinue = () => {
-    setIsAuthenticated(true);
-    updateProfile({
-      id: 'guest-' + Date.now(),
-      name: 'Guest Learner',
-      email: 'guest@adaptive.edu',
-    });
-    navigateTo('dashboard');
-  };
+  // Login is required before onboarding and the preliminary assessment exam.
+  // The former guest/demo bypass was removed intentionally.
 
   return (
     <div className="mx-auto flex min-h-[85vh] max-w-md flex-col justify-center py-6 animate-in fade-in duration-300">
@@ -336,15 +329,11 @@ export const AuthScreen: React.FC = () => {
           </button>
         </form>
 
-        {/* Guest Demo Mode */}
+        {/* Login requirement note */}
         <div className="pt-2 text-center">
-          <button
-            type="button"
-            onClick={handleGuestContinue}
-            className="text-xs text-zinc-400 hover:text-indigo-300 transition-colors cursor-pointer"
-          >
-            Explore as Guest / Try Instant Demo →
-          </button>
+          <p className="text-xs text-zinc-500">
+            A free account is required so your diagnostic results and knowledge graph sync securely across devices.
+          </p>
         </div>
       </div>
     </div>

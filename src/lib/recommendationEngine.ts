@@ -126,5 +126,22 @@ export function computeNextBestLearningAction(
     };
   }
 
-  return chosenRecommendation!;
+  // Guard: subjects with no concepts (fresh custom course, catalog subject without content)
+  // must yield a safe placeholder instead of null, which crashed the dashboard.
+  if (!chosenRecommendation) {
+    chosenRecommendation = {
+      conceptId: '',
+      conceptName: 'Your Learning Track',
+      topicName: subject.name,
+      actionType: 'learn_new',
+      priorityScore: 0,
+      recommendedFormat: 'guided_practice',
+      targetDifficulty: 0.5,
+      estimatedMinutes: 0,
+      explainableReason: `No concepts are loaded for ${subject.name} yet. Open the Course Selector to generate an AI curriculum, or switch to a subject with content.`,
+      prerequisiteGaps: [],
+    };
+  }
+
+  return chosenRecommendation;
 }
